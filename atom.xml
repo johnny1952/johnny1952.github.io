@@ -45,7 +45,7 @@
     <link href="https://johnny1952.github.io/2021/08/23/TestIt/"/>
     <id>https://johnny1952.github.io/2021/08/23/TestIt/</id>
     <published>2021-08-23T13:34:00.000Z</published>
-    <updated>2021-08-26T12:10:39.968Z</updated>
+    <updated>2021-08-26T12:56:01.738Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;Test-it&quot;&gt;&lt;a href=&quot;#Test-it&quot; class=&quot;headerlink&quot; title=&quot;Test it&quot;&gt;&lt;/a&gt;Test it&lt;/h1&gt;&lt;h2 id=&quot;header-1&quot;&gt;&lt;a href=&quot;#header-1&quot; class=&quot;headerlink&quot; title=&quot;header 1&quot;&gt;&lt;/a&gt;header 1&lt;/h2&gt;&lt;h3 id=&quot;header-2&quot;&gt;&lt;a href=&quot;#header-2&quot; class=&quot;headerlink&quot; title=&quot;header 2&quot;&gt;&lt;/a&gt;header 2&lt;/h3&gt;&lt;h4 id=&quot;hader-3&quot;&gt;&lt;a href=&quot;#hader-3&quot; class=&quot;headerlink&quot; title=&quot;hader 3&quot;&gt;&lt;/a&gt;hader 3&lt;/h4&gt;&lt;p&gt;Hllo, I’m testing it.&lt;/p&gt;
@@ -53,6 +53,10 @@
     
     
     
+    <category term="test" scheme="https://johnny1952.github.io/categories/test/"/>
+    
+    
+    <category term="test" scheme="https://johnny1952.github.io/tags/test/"/>
     
   </entry>
   
