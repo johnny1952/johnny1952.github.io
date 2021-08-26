@@ -6,7 +6,7 @@
   <link href="https://johnny1952.github.io/atom.xml" rel="self"/>
   
   <link href="https://johnny1952.github.io/"/>
-  <updated>2021-08-23T13:37:21.134Z</updated>
+  <updated>2021-08-26T12:12:01.464Z</updated>
   <id>https://johnny1952.github.io/</id>
   
   <author>
@@ -17,20 +17,23 @@
   <generator uri="https://hexo.io/">Hexo</generator>
   
   <entry>
-    <title>TestIt</title>
-    <link href="https://johnny1952.github.io/2021/08/23/TestIt/"/>
-    <id>https://johnny1952.github.io/2021/08/23/TestIt/</id>
-    <published>2021-08-23T13:34:00.000Z</published>
-    <updated>2021-08-23T13:37:21.134Z</updated>
+    <title>Hello World</title>
+    <link href="https://johnny1952.github.io/2021/08/26/hello-world/"/>
+    <id>https://johnny1952.github.io/2021/08/26/hello-world/</id>
+    <published>2021-08-26T12:12:01.000Z</published>
+    <updated>2021-08-26T12:12:01.464Z</updated>
     
     
-      
-      
-        
-        
-    <summary type="html">&lt;h1 id=&quot;Test-it&quot;&gt;&lt;a href=&quot;#Test-it&quot; class=&quot;headerlink&quot; title=&quot;Test it&quot;&gt;&lt;/a&gt;Test it&lt;/h1&gt;&lt;h2 id=&quot;header-1&quot;&gt;&lt;a href=&quot;#header-1&quot;</summary>
-        
-      
+    <summary type="html">&lt;p&gt;Welcome to &lt;a href=&quot;https://hexo.io/&quot;&gt;Hexo&lt;/a&gt;! This is your very first post. Check &lt;a href=&quot;https://hexo.io/docs/&quot;&gt;documentation&lt;/a&gt; for more info. If you get any problems when using Hexo, you can find the answer in &lt;a href=&quot;https://hexo.io/docs/troubleshooting.html&quot;&gt;troubleshooting&lt;/a&gt; or you can ask me on &lt;a href=&quot;https://github.com/hexojs/hexo/issues&quot;&gt;GitHub&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 id=&quot;Quick-Start&quot;&gt;&lt;a href=&quot;#Quick-Start&quot; class=&quot;headerlink&quot; title=&quot;Quick Start&quot;&gt;&lt;/a&gt;Quick Start&lt;/h2&gt;&lt;h3 id=&quot;Create-a-new-post&quot;&gt;&lt;a href=&quot;#Create-a-new-post&quot; class=&quot;headerlink&quot; title=&quot;Create a new post&quot;&gt;&lt;/a&gt;Create a new post&lt;/h3&gt;&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;$ hexo new &lt;span class=&quot;string&quot;&gt;&amp;quot;My New Post&amp;quot;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+
+&lt;p&gt;More info: &lt;a href=&quot;https://hexo.io/docs/writing.html&quot;&gt;Writing&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&quot;Run-server&quot;&gt;&lt;a href=&quot;#Run-server&quot; class=&quot;headerlink&quot; title=&quot;Run server&quot;&gt;&lt;/a&gt;Run server&lt;/h3&gt;&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;$ hexo server&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+
+&lt;p&gt;More info: &lt;a href=&quot;https://hexo.io/docs/server.html&quot;&gt;Server&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&quot;Generate-static-files&quot;&gt;&lt;a href=&quot;#Generate-static-files&quot; class=&quot;headerlink&quot; title=&quot;Generate static files&quot;&gt;&lt;/a&gt;Generate static files&lt;/h3&gt;&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;$ hexo generate&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+
+&lt;p&gt;More info: &lt;a href=&quot;https://hexo.io/docs/generating.html&quot;&gt;Generating&lt;/a&gt;&lt;/p&gt;</summary>
     
     
     
@@ -38,20 +41,15 @@
   </entry>
   
   <entry>
-    <title>Hello World</title>
-    <link href="https://johnny1952.github.io/2021/08/22/hello-world/"/>
-    <id>https://johnny1952.github.io/2021/08/22/hello-world/</id>
-    <published>2021-08-22T13:38:40.423Z</published>
-    <updated>2021-08-22T13:38:40.424Z</updated>
+    <title>TestIt</title>
+    <link href="https://johnny1952.github.io/2021/08/23/TestIt/"/>
+    <id>https://johnny1952.github.io/2021/08/23/TestIt/</id>
+    <published>2021-08-23T13:34:00.000Z</published>
+    <updated>2021-08-26T12:10:39.968Z</updated>
     
     
-      
-      
-        
-        
-    <summary type="html">&lt;p&gt;Welcome to &lt;a href=&quot;https://hexo.io/&quot;&gt;Hexo&lt;/a&gt;! This is your very first post. Check &lt;a href=&quot;https://hexo.io/docs/&quot;&gt;documentation&lt;/a&gt;</summary>
-        
-      
+    <summary type="html">&lt;h1 id=&quot;Test-it&quot;&gt;&lt;a href=&quot;#Test-it&quot; class=&quot;headerlink&quot; title=&quot;Test it&quot;&gt;&lt;/a&gt;Test it&lt;/h1&gt;&lt;h2 id=&quot;header-1&quot;&gt;&lt;a href=&quot;#header-1&quot; class=&quot;headerlink&quot; title=&quot;header 1&quot;&gt;&lt;/a&gt;header 1&lt;/h2&gt;&lt;h3 id=&quot;header-2&quot;&gt;&lt;a href=&quot;#header-2&quot; class=&quot;headerlink&quot; title=&quot;header 2&quot;&gt;&lt;/a&gt;header 2&lt;/h3&gt;&lt;h4 id=&quot;hader-3&quot;&gt;&lt;a href=&quot;#hader-3&quot; class=&quot;headerlink&quot; title=&quot;hader 3&quot;&gt;&lt;/a&gt;hader 3&lt;/h4&gt;&lt;p&gt;Hllo, I’m testing it.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/images/pasted-0.png&quot; alt=&quot;upload successful&quot;&gt;&lt;/p&gt;</summary>
     
     
     
