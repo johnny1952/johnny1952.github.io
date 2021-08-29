@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>测试中文</title>
+    <url>/2021/08/29/%E6%B5%8B%E8%AF%95%E4%B8%AD%E6%96%87/</url>
+    <content><![CDATA[<p>测试中文。</p>
+]]></content>
+  </entry>
+  <entry>
     <title>使用JMeter5测试PostgreSQL数据库</title>
     <url>/2021/08/29/%E4%BD%BF%E7%94%A8JMeter5%E6%B5%8B%E8%AF%95PostgreSQL%E6%95%B0%E6%8D%AE%E5%BA%93/</url>
     <content><![CDATA[<p>在本节中，我们使用“JDBC请求”取样器组件来测试PostgreSQL数据库服务器。其他需使用的组件包括 线程组、 JDBC请求、摘要报告。对于MySQL或其他可以通过JDBC驱动连接的数据库，方法是类似的。</p>
