@@ -6,7 +6,7 @@
   <link href="https://johnny1952.github.io/atom.xml" rel="self"/>
   
   <link href="https://johnny1952.github.io/"/>
-  <updated>2021-08-28T07:27:59.949Z</updated>
+  <updated>2021-08-29T14:18:39.736Z</updated>
   <id>https://johnny1952.github.io/</id>
   
   <author>
@@ -15,6 +15,30 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>使用JMeter5测试PostgreSQL数据库</title>
+    <link href="https://johnny1952.github.io/2021/08/29/%E4%BD%BF%E7%94%A8JMeter5%E6%B5%8B%E8%AF%95PostgreSQL%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+    <id>https://johnny1952.github.io/2021/08/29/%E4%BD%BF%E7%94%A8JMeter5%E6%B5%8B%E8%AF%95PostgreSQL%E6%95%B0%E6%8D%AE%E5%BA%93/</id>
+    <published>2021-08-29T14:18:07.000Z</published>
+    <updated>2021-08-29T14:18:39.736Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;p&gt;在本节中，我们使用“JDBC请求”取样器组件来测试PostgreSQL数据库服务器。其他需使用的组件包括 线程组、 JDBC请求、摘要报告。对于MySQL或其他可以通过JDBC驱动连接的数据库，方法是类似的。&lt;/p&gt;
+&lt;h2 id=&quot;准备测试环境&quot;&gt;&lt;a</summary>
+        
+      
+    
+    
+    
+    
+    <category term="JMeter" scheme="https://johnny1952.github.io/tags/JMeter/"/>
+    
+  </entry>
   
   <entry>
     <title>JMeter5之使用JDBC取样器测试数据库</title>
