@@ -1,63 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>测试中文</title>
-    <url>/2021/08/29/%E6%B5%8B%E8%AF%95%E4%B8%AD%E6%96%87/</url>
-    <content><![CDATA[<p>测试中文。</p>
-]]></content>
-  </entry>
-  <entry>
-    <title>使用JMeter5测试PostgreSQL数据库</title>
-    <url>/2021/08/29/%E4%BD%BF%E7%94%A8JMeter5%E6%B5%8B%E8%AF%95PostgreSQL%E6%95%B0%E6%8D%AE%E5%BA%93/</url>
-    <content><![CDATA[<p>在本节中，我们使用“JDBC请求”取样器组件来测试PostgreSQL数据库服务器。其他需使用的组件包括 线程组、 JDBC请求、摘要报告。对于MySQL或其他可以通过JDBC驱动连接的数据库，方法是类似的。</p>
-<h2 id="准备测试环境"><a href="#准备测试环境" class="headerlink" title="准备测试环境"></a>准备测试环境</h2><p>本示例中JMeter与PostgreSQL运行在同一台机器，使用Java 11，PostgreSQL版本是13.4。</p>
-<p>（1）准备数据库</p>
-<p>首先需要安装PostgreSQL数据库（后面简称PG），请参考官方安装说明[ pg下载地址：<a href="https://www.postgresql.org/download/">https://www.postgresql.org/download/</a> ]，选择相符的操作系统，下载和安装PG。完成安装后，我们在PostgreSQL中创建数据库，并在该库下创建数据表以及创建相关用户。</p>
-<p>本示例中创建数据库为“exampledb”，表名称为“user_tbl”。下表为相关sql命令。</p>
-<p>代码片段 0-1 在PostgreSQL数据库上创建用户和数据表：</p>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line">#使用postgres用户在pg命令行上执行下述命令</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">USER</span> dbuser2 <span class="keyword">WITH</span> PASSWORD <span class="string">&#x27;password&#x27;</span>;</span><br><span class="line"><span class="keyword">CREATE</span> DATABASE test OWNER dbuser ENCODING utf8;</span><br><span class="line"><span class="keyword">GRANT</span> <span class="keyword">ALL</span> PRIVILEGES <span class="keyword">ON</span> DATABASE test <span class="keyword">to</span> dbuser;</span><br><span class="line">#然后使用新创建的用户dbuser登录pg后执行下述命令插入记录</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> user_tbl(name <span class="type">VARCHAR</span>(<span class="number">20</span>), signup_date <span class="type">DATE</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> user_tbl(name, signup_date) <span class="keyword">VALUES</span>(<span class="string">&#x27;john&#x27;</span>, <span class="string">&#x27;2020-10-01&#x27;</span>);</span><br></pre></td></tr></table></figure>
-
-<p>（2）安装数据库驱动</p>
-<p>JMeter需要通过数据库驱动程序连接PostgreSQL数据库服务器，因此要将相关驱动文件复制到 JMeter安装目录下的 ./lib目录，并重启JMeter。JMeter从lib和lib/ext目录加载jar，更多详细信息请参阅JMeter的类路径。我们使用postgresql-42.2.23.jar[ 下载地址：<a href="https://jdbc.postgresql.org/download.html">https://jdbc.postgresql.org/download.html</a> ]作为访问PostgreSQL数据库的驱动持续。</p>
-<h2 id="添加JDBC请求组件"><a href="#添加JDBC请求组件" class="headerlink" title="添加JDBC请求组件"></a>添加JDBC请求组件</h2><p>此处略过如何添加线程组以及设置用户数，参考之前的操作步骤即可。现在我们要在测试计划中添加执行JDBC Request的JMeter组件，即“JDBC请求”取样器。<br>首先需要配置JDBC连接属性。选择“线程组”，单击鼠标右键，然后选择 添加  →  配置元件 →  JDBC Connection Configuration 。配置该元件属性，如下图所示。</p>
-<p>图 3-5-2-1 jdbc connection设置<br><img src="/images/jmeter5/jdbc/jdbc%20connection.png" alt="jdbc connection"></p>
-<p>需要设置的字段包括：</p>
-<ul>
-<li>连接池变量名称（Variable name for created pool）：JDBC取样器使用它来识别相关配置，可以是任何字符串。本示例设为postgresql。</li>
-<li>数据库地址（Database URL）：jdbc:postgresql://localhost/exampledb</li>
-<li>JDBC 驱动类（JDBC Driver class）：org.postgresql.Driver</li>
-<li>用户名（Username）：数据库的用户名。本示例中，此处为dbuser2。</li>
-<li>密码（Password）：用户名的密码。本示例中，用户dbuser2的密码是password。</li>
-<li>其他字段可以使用默认值。</li>
-<li>Validation query字段：</li>
-</ul>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Validation Query：这个有好多资料里都没说到，validationQuery must be an SQL SELECT statement, that returns at least one row。不同的数据库，所选择的Validation Query是不同的，经过外国友人的测试，具体可参照以下（postgresql选select 1）：</span><br><span class="line">hsqldb - select 1 from INFORMATION_SCHEMA.SYSTEM_USERS</span><br><span class="line">Oracle - select 1 from dual</span><br><span class="line">DB2 - select 1 from sysibm.sysdummy1</span><br><span class="line">mysql - select 1</span><br><span class="line">microsoft SQL Server - select 1 (tested on SQL-Server 9.0, 10.5 [2008])</span><br><span class="line">postgresql - select 1</span><br><span class="line">ingres - select 1</span><br><span class="line">derby - values 1</span><br><span class="line">H2 - select 1</span><br><span class="line">Firebird - select 1 from rdb$database</span><br></pre></td></tr></table></figure>
-
-<p>接着，添加JDBC请求取样器。再次选择 JDBC 用户元素，单击鼠标右键，在弹出菜单选择 添加  →  取样器  →  JDBC Request 。然后，左键选择这个新元素并修改相关配置。</p>
-<p>在我们的测试计划中，包括三个 JDBC Request取样器。第一个取样器向PostgreSQL数据库增加一行记录，第二个取样器查询记录，第三取样器清理第一个取样器插入的记录。JMeter 将按顺序将请求发送到服务器。具体配置如下。</p>
-<p>图 0-1 第一个JDBC请求取样器即执行增加记录操作的取样器:<br><img src="/images/jmeter5/jdbc/jdbc%20insert.png" alt="jdbc connection"></p>
-<p>上述为第一个请求配置面板，属性按如下设置编辑：</p>
-<ul>
-<li>将名称更改为“jdbc add”。</li>
-<li>连接池变量名称：“ postgresql”（与JDBC Connection Configuration即JDBC连接配置中的相同）</li>
-<li>设置查询类型（Query Type）为“Update Statement”</li>
-<li>SQL 查询字符串</li>
-</ul>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> user_tbl(name, signup_date) <span class="keyword">VALUES</span>(<span class="string">&#x27;mike&#x27;</span>, <span class="string">&#x27;2020-10-01&#x27;</span>);</span><br><span class="line"><span class="comment">--其中查询字符串中可以使用JMeter变量或?，如：</span></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> user_tbl(name, signup_date) <span class="keyword">VALUES</span>(<span class="string">&#x27;$&#123;name&#125;&#x27;</span>, <span class="string">&#x27;2020-10-01&#x27;</span>)</span><br><span class="line"><span class="comment">--其中name为用户定义的变量。</span></span><br><span class="line"><span class="comment">--或者：</span></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> user_tbl(name, signup_date) <span class="keyword">VALUES</span>(?, <span class="string">&#x27;2020-10-01&#x27;</span>)</span><br><span class="line"><span class="comment">--目前暂时不能使用占位符，比如VALUES(?)这样。</span></span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>在parameter values传入相关参数，在parameter types设置参数类型，均以逗号分隔。</li>
-</ul>
-<p>第二个用于查询的JDBC Request取样器如下。<br><img src="/images/jmeter5/jdbc/jdbc%20query.png" alt="jdbc add"></p>
-<p>第三个JDBC Request取样器用于清理之前插入的数据，配置如下。<br><img src="/images/jmeter5/jdbc/jdbc%20delete.png" alt="jdbc add"></p>
-<h3 id="执行和查看结果"><a href="#执行和查看结果" class="headerlink" title="执行和查看结果"></a>执行和查看结果</h3><p>在执行测试时，JMeter 使用控制面板中指定的配置创建数据库连接池。该连接池在 “JDBC Request ”中的“Variable Name of Pool declared in JDBC Connection Configuration”字段中引用。可以使用多个不同的 JDBC 配置元素，但它们必须具有唯一的名称，否则定义在后面配置将覆盖前面定义的配置。每个 JDBC Request都必须引用一个 JDBC 配置池，多个 JDBC Request可以引用同一个池。</p>
-<p>在计划中，可以添加监听器来查看/存储测试结果。</p>
-]]></content>
-      <tags>
-        <tag>JMeter</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>JMeter5之使用JDBC取样器测试数据库</title>
     <url>/2021/08/28/JMeter5%E4%B9%8B%E4%BD%BF%E7%94%A8JDBC%E5%8F%96%E6%A0%B7%E5%99%A8%E6%B5%8B%E8%AF%95%E6%95%B0%E6%8D%AE%E5%BA%93/</url>
     <content><![CDATA[<p>在本节中，我们使用“JDBC请求”取样器组件来测试PostgreSQL数据库服务器。其他需使用的组件包括 线程组、 JDBC请求、摘要报告。对于MySQL或其他可以通过JDBC驱动连接的数据库，方法是类似的。</p>
@@ -113,6 +56,19 @@
       </tags>
   </entry>
   <entry>
+    <title>TestIt</title>
+    <url>/2021/08/23/TestIt/</url>
+    <content><![CDATA[<h1 id="Test-it"><a href="#Test-it" class="headerlink" title="Test it"></a>Test it</h1><h2 id="header-1"><a href="#header-1" class="headerlink" title="header 1"></a>header 1</h2><h3 id="header-2"><a href="#header-2" class="headerlink" title="header 2"></a>header 2</h3><h4 id="hader-3"><a href="#hader-3" class="headerlink" title="hader 3"></a>hader 3</h4><p>Hllo, I’m testing it.</p>
+<p><img src="/images/pasted-0.png" alt="upload successful"></p>
+<span id="more"></span>]]></content>
+      <categories>
+        <category>test</category>
+      </categories>
+      <tags>
+        <tag>test</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Hello World</title>
     <url>/2021/08/26/hello-world/</url>
     <content><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
@@ -139,16 +95,137 @@
       </tags>
   </entry>
   <entry>
-    <title>TestIt</title>
-    <url>/2021/08/23/TestIt/</url>
-    <content><![CDATA[<h1 id="Test-it"><a href="#Test-it" class="headerlink" title="Test it"></a>Test it</h1><h2 id="header-1"><a href="#header-1" class="headerlink" title="header 1"></a>header 1</h2><h3 id="header-2"><a href="#header-2" class="headerlink" title="header 2"></a>header 2</h3><h4 id="hader-3"><a href="#hader-3" class="headerlink" title="hader 3"></a>hader 3</h4><p>Hllo, I’m testing it.</p>
-<p><img src="/images/pasted-0.png" alt="upload successful"></p>
-<span id="more"></span>]]></content>
+    <title>使用JMeter5测试PostgreSQL数据库</title>
+    <url>/2021/08/29/%E4%BD%BF%E7%94%A8JMeter5%E6%B5%8B%E8%AF%95PostgreSQL%E6%95%B0%E6%8D%AE%E5%BA%93/</url>
+    <content><![CDATA[<p>在本节中，我们使用“JDBC请求”取样器组件来测试PostgreSQL数据库服务器。其他需使用的组件包括 线程组、 JDBC请求、摘要报告。对于MySQL或其他可以通过JDBC驱动连接的数据库，方法是类似的。</p>
+<h2 id="准备测试环境"><a href="#准备测试环境" class="headerlink" title="准备测试环境"></a>准备测试环境</h2><p>本示例中JMeter与PostgreSQL运行在同一台机器，使用Java 11，PostgreSQL版本是13.4。</p>
+<p>（1）准备数据库</p>
+<p>首先需要安装PostgreSQL数据库（后面简称PG），请参考官方安装说明[ pg下载地址：<a href="https://www.postgresql.org/download/">https://www.postgresql.org/download/</a> ]，选择相符的操作系统，下载和安装PG。完成安装后，我们在PostgreSQL中创建数据库，并在该库下创建数据表以及创建相关用户。</p>
+<p>本示例中创建数据库为“exampledb”，表名称为“user_tbl”。下表为相关sql命令。</p>
+<p>代码片段 0-1 在PostgreSQL数据库上创建用户和数据表：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line">#使用postgres用户在pg命令行上执行下述命令</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">USER</span> dbuser2 <span class="keyword">WITH</span> PASSWORD <span class="string">&#x27;password&#x27;</span>;</span><br><span class="line"><span class="keyword">CREATE</span> DATABASE test OWNER dbuser ENCODING utf8;</span><br><span class="line"><span class="keyword">GRANT</span> <span class="keyword">ALL</span> PRIVILEGES <span class="keyword">ON</span> DATABASE test <span class="keyword">to</span> dbuser;</span><br><span class="line">#然后使用新创建的用户dbuser登录pg后执行下述命令插入记录</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> user_tbl(name <span class="type">VARCHAR</span>(<span class="number">20</span>), signup_date <span class="type">DATE</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> user_tbl(name, signup_date) <span class="keyword">VALUES</span>(<span class="string">&#x27;john&#x27;</span>, <span class="string">&#x27;2020-10-01&#x27;</span>);</span><br></pre></td></tr></table></figure>
+
+<p>（2）安装数据库驱动</p>
+<p>JMeter需要通过数据库驱动程序连接PostgreSQL数据库服务器，因此要将相关驱动文件复制到 JMeter安装目录下的 ./lib目录，并重启JMeter。JMeter从lib和lib/ext目录加载jar，更多详细信息请参阅JMeter的类路径。我们使用postgresql-42.2.23.jar[ 下载地址：<a href="https://jdbc.postgresql.org/download.html">https://jdbc.postgresql.org/download.html</a> ]作为访问PostgreSQL数据库的驱动持续。</p>
+<h2 id="添加JDBC请求组件"><a href="#添加JDBC请求组件" class="headerlink" title="添加JDBC请求组件"></a>添加JDBC请求组件</h2><p>此处略过如何添加线程组以及设置用户数，参考之前的操作步骤即可。现在我们要在测试计划中添加执行JDBC Request的JMeter组件，即“JDBC请求”取样器。<br>首先需要配置JDBC连接属性。选择“线程组”，单击鼠标右键，然后选择 添加  →  配置元件 →  JDBC Connection Configuration 。配置该元件属性，如下图所示。</p>
+<p>图 3-5-2-1 jdbc connection设置<br><img src="/images/jmeter5/jdbc/jdbc%20connection.png" alt="jdbc connection"></p>
+<p>需要设置的字段包括：</p>
+<ul>
+<li>连接池变量名称（Variable name for created pool）：JDBC取样器使用它来识别相关配置，可以是任何字符串。本示例设为postgresql。</li>
+<li>数据库地址（Database URL）：jdbc:postgresql://localhost/exampledb</li>
+<li>JDBC 驱动类（JDBC Driver class）：org.postgresql.Driver</li>
+<li>用户名（Username）：数据库的用户名。本示例中，此处为dbuser2。</li>
+<li>密码（Password）：用户名的密码。本示例中，用户dbuser2的密码是password。</li>
+<li>其他字段可以使用默认值。</li>
+<li>Validation query字段：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Validation Query：这个有好多资料里都没说到，validationQuery must be an SQL SELECT statement, that returns at least one row。不同的数据库，所选择的Validation Query是不同的，经过外国友人的测试，具体可参照以下（postgresql选select 1）：</span><br><span class="line">hsqldb - select 1 from INFORMATION_SCHEMA.SYSTEM_USERS</span><br><span class="line">Oracle - select 1 from dual</span><br><span class="line">DB2 - select 1 from sysibm.sysdummy1</span><br><span class="line">mysql - select 1</span><br><span class="line">microsoft SQL Server - select 1 (tested on SQL-Server 9.0, 10.5 [2008])</span><br><span class="line">postgresql - select 1</span><br><span class="line">ingres - select 1</span><br><span class="line">derby - values 1</span><br><span class="line">H2 - select 1</span><br><span class="line">Firebird - select 1 from rdb$database</span><br></pre></td></tr></table></figure>
+
+<p>接着，添加JDBC请求取样器。再次选择 JDBC 用户元素，单击鼠标右键，在弹出菜单选择 添加  →  取样器  →  JDBC Request 。然后，左键选择这个新元素并修改相关配置。</p>
+<p>在我们的测试计划中，包括三个 JDBC Request取样器。第一个取样器向PostgreSQL数据库增加一行记录，第二个取样器查询记录，第三取样器清理第一个取样器插入的记录。JMeter 将按顺序将请求发送到服务器。具体配置如下。</p>
+<p>图 0-1 第一个JDBC请求取样器即执行增加记录操作的取样器:<br><img src="/images/jmeter5/jdbc/jdbc%20insert.png" alt="jdbc connection"></p>
+<p>上述为第一个请求配置面板，属性按如下设置编辑：</p>
+<ul>
+<li>将名称更改为“jdbc add”。</li>
+<li>连接池变量名称：“ postgresql”（与JDBC Connection Configuration即JDBC连接配置中的相同）</li>
+<li>设置查询类型（Query Type）为“Update Statement”</li>
+<li>SQL 查询字符串</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> user_tbl(name, signup_date) <span class="keyword">VALUES</span>(<span class="string">&#x27;mike&#x27;</span>, <span class="string">&#x27;2020-10-01&#x27;</span>);</span><br><span class="line"><span class="comment">--其中查询字符串中可以使用JMeter变量或?，如：</span></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> user_tbl(name, signup_date) <span class="keyword">VALUES</span>(<span class="string">&#x27;$&#123;name&#125;&#x27;</span>, <span class="string">&#x27;2020-10-01&#x27;</span>)</span><br><span class="line"><span class="comment">--其中name为用户定义的变量。</span></span><br><span class="line"><span class="comment">--或者：</span></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> user_tbl(name, signup_date) <span class="keyword">VALUES</span>(?, <span class="string">&#x27;2020-10-01&#x27;</span>)</span><br><span class="line"><span class="comment">--目前暂时不能使用占位符，比如VALUES(?)这样。</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>在parameter values传入相关参数，在parameter types设置参数类型，均以逗号分隔。</li>
+</ul>
+<p>第二个用于查询的JDBC Request取样器如下。<br><img src="/images/jmeter5/jdbc/jdbc%20query.png" alt="jdbc add"></p>
+<p>第三个JDBC Request取样器用于清理之前插入的数据，配置如下。<br><img src="/images/jmeter5/jdbc/jdbc%20delete.png" alt="jdbc add"></p>
+<h3 id="执行和查看结果"><a href="#执行和查看结果" class="headerlink" title="执行和查看结果"></a>执行和查看结果</h3><p>在执行测试时，JMeter 使用控制面板中指定的配置创建数据库连接池。该连接池在 “JDBC Request ”中的“Variable Name of Pool declared in JDBC Connection Configuration”字段中引用。可以使用多个不同的 JDBC 配置元素，但它们必须具有唯一的名称，否则定义在后面配置将覆盖前面定义的配置。每个 JDBC Request都必须引用一个 JDBC 配置池，多个 JDBC Request可以引用同一个池。</p>
+<p>在计划中，可以添加监听器来查看/存储测试结果。</p>
+]]></content>
+      <tags>
+        <tag>JMeter</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>测试中文</title>
+    <url>/2021/08/29/%E6%B5%8B%E8%AF%95%E4%B8%AD%E6%96%87/</url>
+    <content><![CDATA[<p>测试中文。</p>
+]]></content>
+  </entry>
+  <entry>
+    <title>使用pyecharts绘制系统依赖关系图</title>
+    <url>/2021/09/05/%E4%BD%BF%E7%94%A8pyecharts%E7%BB%98%E5%88%B6%E7%B3%BB%E7%BB%9F%E4%BE%9D%E8%B5%96%E5%85%B3%E7%B3%BB%E5%9B%BE/</url>
+    <content><![CDATA[<h2 id="背景介绍"><a href="#背景介绍" class="headerlink" title="背景介绍"></a>背景介绍</h2><p>近期梳理了公司内部系统之间的数据关系，得到了多个excel格式的统计文件，每个文件包含了该系统自身数据清单、依赖的其他系统的数据清单、对其他系统供应的数据清单。<br>各系统之间依赖关系复杂，所以我想使用一些绘图工具，以可视化图形图表的形式展现这些系统之间的数据关系，给观众形成一种非常直观的印象。</p>
+<p>一般情况下，应该是有类似于调用链跟踪等工具，比如Java技术栈使用Skywalking或美团CAT等工具，做到调用级别上的跟踪和相互关系的可视化展示。<br>这种情况下，也许不需要再编写程序来绘制依赖关系了。这两种工具可以很详细的绘制组件或服务之间的调用关系。</p>
+<p>不过，本文介绍如何绘制粒度稍微粗一些的关系图，没有细化到具体某个接口调用。主要的工具是pyecharts，百度开源的工具包。在绘制的时候，只使用了依赖表和对外供应两张表。</p>
+<h2 id="可视化思路"><a href="#可视化思路" class="headerlink" title="可视化思路"></a>可视化思路</h2><p>可视化的方式有很多种，我的需求是以最小成本，最快速度把这个可视化效果达成。不管是使用类似思维导图或draw.io这种工具，或者是编码实现，只要可以实现，任何方式都可以考虑。</p>
+<p>我考虑的第一种方式，是使用draw.io。它确实提供了很多模型，但是最终我发现，手动去绘图，会花很多时间，然后效果还一般。<br>大概花了总共2小时的时间，发现用draw.io来绘制十多个系统之间复杂的连接，还是有点难。</p>
+<p>所以，我考虑第二种方式是使用思维导图。确实思维导图很快可以把图建立起来，因为执行一次<code>回车</code>操作就可以生成一个方框，速度非常快。但是我嫌这个图不好看。<br>还没等我完成全部的系统和系统之间的连线，我就不想再做下去了。</p>
+<p>最后，我决定使用编码的方式实现。这样的好处有两点：第一是生成的图形会很好看，效果好，第二是后续的维护会自动化，一劳永逸。</p>
+<h2 id="实现可视化"><a href="#实现可视化" class="headerlink" title="实现可视化"></a>实现可视化</h2><p>经过调研了几个框架，包括pyecharts，politly，最终我发现pyecharts的关系图其实可以实现我的想法。</p>
+<p>我基于<a href="https://gallery.pyecharts.org/#/Graph/graph_les_miserables">https://gallery.pyecharts.org/#/Graph/graph_les_miserables</a>这个案例实现了想要的效果。</p>
+<p>效果图如下，使用菱形图表示系统，圆形便是系统的数据：<br><img src="/images/result1.png" alt="效果图"></p>
+<h2 id="编码实现"><a href="#编码实现" class="headerlink" title="编码实现"></a>编码实现</h2><p>相关的代码或文件分三部分，第一部分是包含系统关系的原始文件，放在files_excel目录下，第二部分是用于生成表示图形信息的json文件的python脚本<code>build_json_system_relation.py</code>，第三部分是绘制图形的代码文件<code>generate_relations.py</code>。</p>
+<h3 id="数据关系文件"><a href="#数据关系文件" class="headerlink" title="数据关系文件"></a>数据关系文件</h3><p>files_excel目录下的文件，每个文件包含两个sheet（表单），即<code>对外供应数据表清单</code>和<code>所依赖外部系统数据表清单</code>。</p>
+<p><code>对外供应数据表清单</code>表单的格式如下：</p>
+<table>
+<thead>
+<tr>
+<th align="center">目的系统</th>
+<th align="center">数据英文名</th>
+<th align="center">数据中文名</th>
+<th align="center">数据交换方式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">B</td>
+<td align="center">table1</td>
+<td align="center">数据1</td>
+<td align="center">交易线</td>
+</tr>
+<tr>
+<td align="center">C</td>
+<td align="center">table2</td>
+<td align="center">数据2</td>
+<td align="center">数据线</td>
+</tr>
+<tr>
+<td align="center">D</td>
+<td align="center">table3</td>
+<td align="center">数据3</td>
+<td align="center">数据线</td>
+</tr>
+</tbody></table>
+<p><code>所依赖外部系统数据表清单</code>表单的格式与上面类似，不过第一列是源系统。</p>
+<p>上述两个文件就是我们要使用到的系统数据关系文件。如果有工具可以产生上述文件，那所有的步骤都可以自动化完成，包括生成本文讲的这种简单的关系图。如果不能自动生成，那么可能需要人工维护。所以建议还是都能实现自动化。关于如何产生上述关系，不在本文范围内，不过我觉得这种关系在任何一家公司都会维护起来的，比如通过提供一个维护页面维护上述两张表。</p>
+<h3 id="生成表示图形中节点和边的JSON文件"><a href="#生成表示图形中节点和边的JSON文件" class="headerlink" title="生成表示图形中节点和边的JSON文件"></a>生成表示图形中节点和边的JSON文件</h3><p>现在我们已经有了原始关系文件，这种文件一般是for人类的，就是说给人看和维护的。那么现在我们需要把它们转成给代码使用的json文件。</p>
+<p>json文件格式大致如下，可以先了解一下：</p>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">&quot;categories&quot;</span>: [</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">&quot;name&quot;</span>: <span class="string">&quot;data node&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;symbol&quot;</span>: <span class="string">&quot;circle&quot;</span></span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">&quot;name&quot;</span>: <span class="string">&quot;system node&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;symbol&quot;</span>: <span class="string">&quot;diamond&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">  ],</span><br><span class="line">  <span class="attr">&quot;nodes&quot;</span>: [</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">&quot;label&quot;</span>: <span class="string">&quot;SYSTEM_A&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;id&quot;</span>: <span class="string">&quot;SYSTEM_A&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;category&quot;</span>: <span class="number">0</span></span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">&quot;label&quot;</span>: <span class="string">&quot;SYSTEM_B&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;id&quot;</span>: <span class="string">&quot;SYSTEM_B&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;category&quot;</span>: <span class="number">1</span></span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">&quot;label&quot;</span>: <span class="string">&quot;SYSTEM_C&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;id&quot;</span>: <span class="string">&quot;SYSTEM_C&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;category&quot;</span>: <span class="number">1</span></span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">&quot;label&quot;</span>: <span class="string">&quot;SYSTEM_A#table1&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;id&quot;</span>: <span class="string">&quot;SYSTEM_A#table1&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;category&quot;</span>: <span class="number">0</span></span><br><span class="line">    &#125;</span><br><span class="line">  ],</span><br><span class="line">  <span class="attr">&quot;edges&quot;</span>: [</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">&quot;sourceID&quot;</span>: <span class="string">&quot;SYSTEM_A#table1&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;attributes&quot;</span>: &#123;&#125;,</span><br><span class="line">      <span class="attr">&quot;targetID&quot;</span>: <span class="string">&quot;SYSTEM_B&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;size&quot;</span>: <span class="number">1</span></span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">&quot;sourceID&quot;</span>: <span class="string">&quot;SYSTEM_A#table1&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;attributes&quot;</span>: &#123;&#125;,</span><br><span class="line">      <span class="attr">&quot;targetID&quot;</span>: <span class="string">&quot;SYSTEM_C&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;size&quot;</span>: <span class="number">1</span></span><br><span class="line">    &#125;</span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上述文件包含了三部分，第一份是<code>categories</code>，表示分类，可以将节点进行分类，方便区分；第二部分是<code>nodes</code>，表示图中所有节点，第三部分是<code>edges</code>表示图中所有边。</p>
+<p>生成上述JSON文件的大概思路或算法是这样的：使用pandas读取excel表的数据，第一列（源或目的系统）作为系统节点，而第三列也就是数据列作为数据节点，对应JSON文件中的<code>nodes</code>中的每个元素。每一行都是一个关系，作为一条边，源节点是数据节点，目的节点是系统节点，对应JSON文件中的<code>edges</code>中的每个元素。通过遍历所有excel文件中的两个表单的每一行（非空），建立节点、边的信息，形成一个大的JSON文件。</p>
+<p>关键代码如下：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> json</span><br><span class="line"><span class="keyword">import</span> pandas <span class="keyword">as</span> pd</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">get_all_node_data</span>(<span class="params">data_dir</span>):</span></span><br><span class="line">    all_node_data = []</span><br><span class="line"></span><br><span class="line">    <span class="keyword">import</span> os</span><br><span class="line">    <span class="keyword">for</span> root, dirs, files <span class="keyword">in</span> os.walk(data_dir):</span><br><span class="line">        <span class="keyword">for</span> file <span class="keyword">in</span> files:</span><br><span class="line">            <span class="comment"># get node data</span></span><br><span class="line">            filepath = os.path.join(root, file)</span><br><span class="line">            all_node_data.extend(read_data_from_excel(filepath))</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> all_node_data</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">read_data_from_excel</span>(<span class="params">filename</span>):</span></span><br><span class="line">    <span class="string">&quot;&quot;&quot;从excel读取数据，数据项作为一个节点（信息类）&quot;&quot;&quot;</span></span><br><span class="line">    out = []</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 系统节点</span></span><br><span class="line">    system_name = get_system_name(filename)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 读取&quot;对外供应数据表清单&quot;</span></span><br><span class="line">    <span class="comment"># 目的系统名称 表英文名 表中文名称 数据供应方式（交易线，数据线）</span></span><br><span class="line">    data = pd.read_excel(filename, sheet_name=<span class="string">&quot;对外供应数据表清单&quot;</span>, engine=<span class="string">&quot;openpyxl&quot;</span>)</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="built_in">len</span>(data)):</span><br><span class="line">        row = data.iloc[i]</span><br><span class="line">        info_name = system_name + <span class="string">&quot;#&quot;</span> + trim_node_name(row[<span class="number">2</span>])  <span class="comment"># 类似 A#财务数据 这种格式</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># 处理以/分隔的多个系统</span></span><br><span class="line">        system_target_list = []</span><br><span class="line">        <span class="keyword">if</span> <span class="string">&quot;/&quot;</span> <span class="keyword">in</span> row[<span class="number">0</span>]:</span><br><span class="line">            systems = <span class="built_in">str</span>.split(row[<span class="number">0</span>], <span class="string">&quot;/&quot;</span>)</span><br><span class="line">            <span class="keyword">for</span> system <span class="keyword">in</span> systems:</span><br><span class="line">                system_target = get_system_name(system)</span><br><span class="line">                <span class="keyword">if</span> system_target <span class="keyword">not</span> <span class="keyword">in</span> SYSTEM_IGNORE:</span><br><span class="line">                    system_target_list.append(system_target)</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            system_target = get_system_name(row[<span class="number">0</span>])</span><br><span class="line">            <span class="keyword">if</span> system_target <span class="keyword">not</span> <span class="keyword">in</span> SYSTEM_IGNORE:</span><br><span class="line">                system_target_list.append(system_target)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> system_target <span class="keyword">in</span> system_target_list:</span><br><span class="line">            tmp_node = copy.deepcopy(generate_node_data(info_name, system_target, row[<span class="number">1</span>], row[<span class="number">2</span>], row[<span class="number">3</span>]))</span><br><span class="line">            out.append(tmp_node)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 读取&quot;所依赖外部系统数据表清单&quot;</span></span><br><span class="line">    <span class="comment"># 目的系统名称 表英文名 表中文名 数据供应方式（交易线，数据线）</span></span><br><span class="line">    data2 = pd.read_excel(filename, sheet_name=<span class="string">&quot;所依赖外部系统数据表清单&quot;</span>, engine=<span class="string">&quot;openpyxl&quot;</span>)</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="built_in">len</span>(data2)):</span><br><span class="line">        row = data2.iloc[i]</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 处理以/分隔的多个系统</span></span><br><span class="line">        system_src_list = []</span><br><span class="line">        <span class="keyword">if</span> <span class="string">&quot;/&quot;</span> <span class="keyword">in</span> row[<span class="number">0</span>]:</span><br><span class="line">            systems_src = <span class="built_in">str</span>.split(row[<span class="number">0</span>], <span class="string">&quot;/&quot;</span>)</span><br><span class="line">            <span class="keyword">for</span> system <span class="keyword">in</span> systems_src:</span><br><span class="line">                system_src_list.append(system)</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            system_src_list.append(row[<span class="number">0</span>])</span><br><span class="line"></span><br><span class="line">        system_target = system_name</span><br><span class="line">        <span class="keyword">for</span> system <span class="keyword">in</span> system_src_list:</span><br><span class="line">            system_name_src = get_system_name(system)</span><br><span class="line">            <span class="keyword">if</span> system_name_src <span class="keyword">not</span> <span class="keyword">in</span> SYSTEM_IGNORE:</span><br><span class="line">                info_name = system_name_src + <span class="string">&quot;#&quot;</span> + trim_node_name(row[<span class="number">2</span>])</span><br><span class="line">                tmp_node = copy.deepcopy(generate_node_data(info_name, system_target, row[<span class="number">1</span>], row[<span class="number">2</span>], row[<span class="number">3</span>]))</span><br><span class="line">                out.append(tmp_node)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> out</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="使用pyecharts绘制图形"><a href="#使用pyecharts绘制图形" class="headerlink" title="使用pyecharts绘制图形"></a>使用pyecharts绘制图形</h3><p>现在已经有JSON文件了，工作完成了大部分。接下来就是编写代码绘制关系图，生成一个html文件。这个html文件是可交互的，可以移动鼠标或缩放。如果未来在这个页面增加其他一些检索或表格生成功能就更好了。可以作为未来继续尝试的点。这块没有什么算法逻辑。</p>
+<p>关键代码如下：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">json_file = <span class="string">&quot;all_node_data.json&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">with</span> <span class="built_in">open</span>(json_file, <span class="string">&#x27;r&#x27;</span>) <span class="keyword">as</span> f:</span><br><span class="line">    data_local = f.read()</span><br><span class="line">    data = json.loads(data_local)</span><br><span class="line"></span><br><span class="line">nodes = [</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment"># &quot;x&quot;: node[&quot;x&quot;],</span></span><br><span class="line">        <span class="comment"># &quot;y&quot;: node[&quot;y&quot;],</span></span><br><span class="line">        <span class="string">&quot;id&quot;</span>: node[<span class="string">&quot;id&quot;</span>],</span><br><span class="line">        <span class="string">&quot;name&quot;</span>: node[<span class="string">&quot;label&quot;</span>],</span><br><span class="line">        <span class="string">&quot;symbolSize&quot;</span>: node[<span class="string">&quot;size&quot;</span>],</span><br><span class="line">        <span class="string">&quot;symbol&quot;</span>: node[<span class="string">&quot;symbol&quot;</span>],</span><br><span class="line">        <span class="comment"># &quot;itemStyle&quot;: &#123;&quot;normal&quot;: &#123;&quot;color&quot;: node[&quot;color&quot;]&#125;&#125;,</span></span><br><span class="line">        <span class="string">&quot;category&quot;</span>: node[<span class="string">&quot;category&quot;</span>]</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">for</span> node <span class="keyword">in</span> data[<span class="string">&quot;nodes&quot;</span>]</span><br><span class="line">]</span><br><span class="line"></span><br><span class="line">edges = [</span><br><span class="line">    &#123;<span class="string">&quot;source&quot;</span>: edge[<span class="string">&quot;sourceID&quot;</span>], <span class="string">&quot;target&quot;</span>: edge[<span class="string">&quot;targetID&quot;</span>], <span class="string">&quot;value&quot;</span>: edge[<span class="string">&quot;value&quot;</span>],</span><br><span class="line">     <span class="string">&quot;linestyle_opts&quot;</span>: opts.LineStyleOpts(type_=edge[<span class="string">&quot;type_&quot;</span>]),</span><br><span class="line">     &#125; <span class="keyword">for</span></span><br><span class="line">    edge <span class="keyword">in</span> data[<span class="string">&quot;edges&quot;</span>]</span><br><span class="line">]</span><br><span class="line"></span><br><span class="line">categories = data[<span class="string">&quot;categories&quot;</span>]</span><br><span class="line"></span><br><span class="line">(</span><br><span class="line">    Graph(init_opts=opts.InitOpts(width=<span class="string">&quot;1600px&quot;</span>, height=<span class="string">&quot;1200px&quot;</span>))</span><br><span class="line">        .add(</span><br><span class="line">        series_name=<span class="string">&quot;&quot;</span>,</span><br><span class="line">        nodes=nodes,</span><br><span class="line">        links=edges,</span><br><span class="line">        categories=categories,</span><br><span class="line">        layout=<span class="string">&quot;circular&quot;</span>,  <span class="comment"># circular , force, none</span></span><br><span class="line">        is_roam=<span class="literal">True</span>,</span><br><span class="line">        is_focusnode=<span class="literal">True</span>,</span><br><span class="line">        repulsion=<span class="number">100</span>,</span><br><span class="line">        is_rotate_label=<span class="literal">True</span>,</span><br><span class="line">        label_opts=opts.LabelOpts(is_show=<span class="literal">True</span>, position=<span class="string">&quot;right&quot;</span>),</span><br><span class="line">        linestyle_opts=opts.LineStyleOpts(width=<span class="number">1</span>, curve=<span class="number">0.3</span>, opacity=<span class="number">1.0</span>),  <span class="comment"># type_=&quot;solid&quot;</span></span><br><span class="line">        edge_symbol=[<span class="string">&quot;&quot;</span>, <span class="string">&quot;arrow&quot;</span>],  <span class="comment"># 单向箭头</span></span><br><span class="line">        edge_label=opts.LabelOpts(</span><br><span class="line">            is_show=<span class="literal">False</span>, position=<span class="string">&quot;middle&quot;</span>, formatter=<span class="string">&quot;&#123;b&#125;: &#123;c&#125; &quot;</span>  <span class="comment"># 设置关系说明</span></span><br><span class="line">        )</span><br><span class="line">    )</span><br><span class="line">        .set_global_opts(title_opts=opts.TitleOpts(title=<span class="string">&quot;系统数据关系图&quot;</span>),</span><br><span class="line">                         legend_opts=opts.LegendOpts(orient=<span class="string">&quot;vertical&quot;</span>, pos_left=<span class="string">&quot;2%&quot;</span>, pos_top=<span class="string">&quot;20%&quot;</span>), )</span><br><span class="line">        .render(<span class="string">&quot;relations-systems.html&quot;</span>)</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>代码地址：<a href="https://gitee.com/zackli518/charts_system_relations/tree/master">https://gitee.com/zackli518/charts_system_relations/tree/master</a></p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>参考：</p>
+<ul>
+<li><a href="https://cloud.tencent.com/developer/article/1741359">https://cloud.tencent.com/developer/article/1741359</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/358471558">https://zhuanlan.zhihu.com/p/358471558</a> 了解了比较多类的属性</li>
+<li><a href="https://gallery.pyecharts.org/#/Graph/graph_les_miserables">https://gallery.pyecharts.org/#/Graph/graph_les_miserables</a> 官方文档说明，案例比较丰富</li>
+<li><a href="https://github.com/pyecharts/pyecharts-gallery">https://github.com/pyecharts/pyecharts-gallery</a> pyecharts的github地址</li>
+</ul>
+]]></content>
       <categories>
-        <category>test</category>
+        <category>python</category>
       </categories>
       <tags>
-        <tag>test</tag>
+        <tag>pyecharts</tag>
+        <tag>python</tag>
+        <tag>可视化</tag>
       </tags>
   </entry>
 </search>
