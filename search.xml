@@ -1,157 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>JMeter5之使用JDBC取样器测试数据库</title>
-    <url>/2021/08/28/JMeter5%E4%B9%8B%E4%BD%BF%E7%94%A8JDBC%E5%8F%96%E6%A0%B7%E5%99%A8%E6%B5%8B%E8%AF%95%E6%95%B0%E6%8D%AE%E5%BA%93/</url>
-    <content><![CDATA[<p>在本节中，我们使用“JDBC请求”取样器组件来测试PostgreSQL数据库服务器。其他需使用的组件包括 线程组、 JDBC请求、摘要报告。对于MySQL或其他可以通过JDBC驱动连接的数据库，方法是类似的。</p>
-<h2 id="准备测试环境"><a href="#准备测试环境" class="headerlink" title="准备测试环境"></a>准备测试环境</h2><p>本示例中JMeter与PostgreSQL运行在同一台机器，使用Java 11，PostgreSQL版本是13.4。</p>
-<p>（1）准备数据库</p>
-<p>首先需要安装PostgreSQL数据库（后面简称PG），请参考官方安装说明[ pg下载地址：<a href="https://www.postgresql.org/download/">https://www.postgresql.org/download/</a> ]，选择相符的操作系统，下载和安装PG。完成安装后，我们在PostgreSQL中创建数据库，并在该库下创建数据表以及创建相关用户。</p>
-<p>本示例中创建数据库为“exampledb”，表名称为“user_tbl”。下表为相关sql命令。</p>
-<p>代码片段 0-1 在PostgreSQL数据库上创建用户和数据表：</p>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line">#使用postgres用户在pg命令行上执行下述命令</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">USER</span> dbuser2 <span class="keyword">WITH</span> PASSWORD <span class="string">&#x27;password&#x27;</span>;</span><br><span class="line"><span class="keyword">CREATE</span> DATABASE test OWNER dbuser ENCODING utf8;</span><br><span class="line"><span class="keyword">GRANT</span> <span class="keyword">ALL</span> PRIVILEGES <span class="keyword">ON</span> DATABASE test <span class="keyword">to</span> dbuser;</span><br><span class="line">#然后使用新创建的用户dbuser登录pg后执行下述命令插入记录</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> user_tbl(name <span class="type">VARCHAR</span>(<span class="number">20</span>), signup_date <span class="type">DATE</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> user_tbl(name, signup_date) <span class="keyword">VALUES</span>(<span class="string">&#x27;john&#x27;</span>, <span class="string">&#x27;2020-10-01&#x27;</span>);</span><br></pre></td></tr></table></figure>
-
-<p>（2）安装数据库驱动</p>
-<p>JMeter需要通过数据库驱动程序连接PostgreSQL数据库服务器，因此要将相关驱动文件复制到 JMeter安装目录下的 ./lib目录，并重启JMeter。JMeter从lib和lib/ext目录加载jar，更多详细信息请参阅JMeter的类路径。我们使用postgresql-42.2.23.jar[ 下载地址：<a href="https://jdbc.postgresql.org/download.html">https://jdbc.postgresql.org/download.html</a> ]作为访问PostgreSQL数据库的驱动持续。</p>
-<h2 id="添加JDBC请求组件"><a href="#添加JDBC请求组件" class="headerlink" title="添加JDBC请求组件"></a>添加JDBC请求组件</h2><p>此处略过如何添加线程组以及设置用户数，参考之前的操作步骤即可。现在我们要在测试计划中添加执行JDBC Request的JMeter组件，即“JDBC请求”取样器。<br>首先需要配置JDBC连接属性。选择“线程组”，单击鼠标右键，然后选择 添加  →  配置元件 →  JDBC Connection Configuration 。配置该元件属性，如下图所示。</p>
-<p>图 3-5-2-1 jdbc connection设置<br><img src="/images/jmeter5/jdbc/jdbc%20connection.png" alt="jdbc connection"></p>
-<p>需要设置的字段包括：</p>
-<ul>
-<li>连接池变量名称（Variable name for created pool）：JDBC取样器使用它来识别相关配置，可以是任何字符串。本示例设为postgresql。</li>
-<li>数据库地址（Database URL）：jdbc:postgresql://localhost/exampledb</li>
-<li>JDBC 驱动类（JDBC Driver class）：org.postgresql.Driver</li>
-<li>用户名（Username）：数据库的用户名。本示例中，此处为dbuser2。</li>
-<li>密码（Password）：用户名的密码。本示例中，用户dbuser2的密码是password。</li>
-<li>其他字段可以使用默认值。</li>
-<li>Validation query字段：</li>
-</ul>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Validation Query：这个有好多资料里都没说到，validationQuery must be an SQL SELECT statement, that returns at least one row。不同的数据库，所选择的Validation Query是不同的，经过外国友人的测试，具体可参照以下（postgresql选select 1）：</span><br><span class="line">hsqldb - select 1 from INFORMATION_SCHEMA.SYSTEM_USERS</span><br><span class="line">Oracle - select 1 from dual</span><br><span class="line">DB2 - select 1 from sysibm.sysdummy1</span><br><span class="line">mysql - select 1</span><br><span class="line">microsoft SQL Server - select 1 (tested on SQL-Server 9.0, 10.5 [2008])</span><br><span class="line">postgresql - select 1</span><br><span class="line">ingres - select 1</span><br><span class="line">derby - values 1</span><br><span class="line">H2 - select 1</span><br><span class="line">Firebird - select 1 from rdb$database</span><br></pre></td></tr></table></figure>
-
-<p>接着，添加JDBC请求取样器。再次选择 JDBC 用户元素，单击鼠标右键，在弹出菜单选择 添加  →  取样器  →  JDBC Request 。然后，左键选择这个新元素并修改相关配置。</p>
-<p>在我们的测试计划中，包括三个 JDBC Request取样器。第一个取样器向PostgreSQL数据库增加一行记录，第二个取样器查询记录，第三取样器清理第一个取样器插入的记录。JMeter 将按顺序将请求发送到服务器。具体配置如下。</p>
-<p>图 0-1 第一个JDBC请求取样器即执行增加记录操作的取样器:<br><img src="/images/jmeter5/jdbc/jdbc%20insert.png" alt="jdbc connection"></p>
-<p>上述为第一个请求配置面板，属性按如下设置编辑：</p>
-<ul>
-<li>将名称更改为“jdbc add”。</li>
-<li>连接池变量名称：“ postgresql”（与JDBC Connection Configuration即JDBC连接配置中的相同）</li>
-<li>设置查询类型（Query Type）为“Update Statement”</li>
-<li>SQL 查询字符串</li>
-</ul>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> user_tbl(name, signup_date) <span class="keyword">VALUES</span>(<span class="string">&#x27;mike&#x27;</span>, <span class="string">&#x27;2020-10-01&#x27;</span>);</span><br><span class="line"><span class="comment">--其中查询字符串中可以使用JMeter变量或?，如：</span></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> user_tbl(name, signup_date) <span class="keyword">VALUES</span>(<span class="string">&#x27;$&#123;name&#125;&#x27;</span>, <span class="string">&#x27;2020-10-01&#x27;</span>)</span><br><span class="line"><span class="comment">--其中name为用户定义的变量。</span></span><br><span class="line"><span class="comment">--或者：</span></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> user_tbl(name, signup_date) <span class="keyword">VALUES</span>(?, <span class="string">&#x27;2020-10-01&#x27;</span>)</span><br><span class="line"><span class="comment">--目前暂时不能使用占位符，比如VALUES(?)这样。</span></span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>在parameter values传入相关参数，在parameter types设置参数类型，均以逗号分隔。</li>
-</ul>
-<p>第二个用于查询的JDBC Request取样器如下。<br><img src="/images/jmeter5/jdbc/jdbc%20query.png" alt="jdbc add"></p>
-<p>第三个JDBC Request取样器用于清理之前插入的数据，配置如下。<br><img src="/images/jmeter5/jdbc/jdbc%20delete.png" alt="jdbc add"></p>
-<h3 id="执行和查看结果"><a href="#执行和查看结果" class="headerlink" title="执行和查看结果"></a>执行和查看结果</h3><p>在执行测试时，JMeter 使用控制面板中指定的配置创建数据库连接池。该连接池在 “JDBC Request ”中的“Variable Name of Pool declared in JDBC Connection Configuration”字段中引用。可以使用多个不同的 JDBC 配置元素，但它们必须具有唯一的名称，否则定义在后面配置将覆盖前面定义的配置。每个 JDBC Request都必须引用一个 JDBC 配置池，多个 JDBC Request可以引用同一个池。</p>
-<p>在计划中，可以添加监听器来查看/存储测试结果。</p>
-]]></content>
-      <tags>
-        <tag>JMeter</tag>
-        <tag>JMeter5</tag>
-        <tag>JDBC</tag>
-        <tag>Database</tag>
-        <tag>Test</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>TestIt</title>
-    <url>/2021/08/23/TestIt/</url>
-    <content><![CDATA[<h1 id="Test-it"><a href="#Test-it" class="headerlink" title="Test it"></a>Test it</h1><h2 id="header-1"><a href="#header-1" class="headerlink" title="header 1"></a>header 1</h2><h3 id="header-2"><a href="#header-2" class="headerlink" title="header 2"></a>header 2</h3><h4 id="hader-3"><a href="#hader-3" class="headerlink" title="hader 3"></a>hader 3</h4><p>Hllo, I’m testing it.</p>
-<p><img src="/images/pasted-0.png" alt="upload successful"></p>
-<span id="more"></span>]]></content>
-      <categories>
-        <category>test</category>
-      </categories>
-      <tags>
-        <tag>test</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Hello World</title>
-    <url>/2021/08/26/hello-world/</url>
-    <content><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p>
-<span id="more"></span>
-
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
-]]></content>
-      <categories>
-        <category>helloworld</category>
-      </categories>
-      <tags>
-        <tag>helloworld</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>使用JMeter5测试PostgreSQL数据库</title>
-    <url>/2021/08/29/%E4%BD%BF%E7%94%A8JMeter5%E6%B5%8B%E8%AF%95PostgreSQL%E6%95%B0%E6%8D%AE%E5%BA%93/</url>
-    <content><![CDATA[<p>在本节中，我们使用“JDBC请求”取样器组件来测试PostgreSQL数据库服务器。其他需使用的组件包括 线程组、 JDBC请求、摘要报告。对于MySQL或其他可以通过JDBC驱动连接的数据库，方法是类似的。</p>
-<h2 id="准备测试环境"><a href="#准备测试环境" class="headerlink" title="准备测试环境"></a>准备测试环境</h2><p>本示例中JMeter与PostgreSQL运行在同一台机器，使用Java 11，PostgreSQL版本是13.4。</p>
-<p>（1）准备数据库</p>
-<p>首先需要安装PostgreSQL数据库（后面简称PG），请参考官方安装说明[ pg下载地址：<a href="https://www.postgresql.org/download/">https://www.postgresql.org/download/</a> ]，选择相符的操作系统，下载和安装PG。完成安装后，我们在PostgreSQL中创建数据库，并在该库下创建数据表以及创建相关用户。</p>
-<p>本示例中创建数据库为“exampledb”，表名称为“user_tbl”。下表为相关sql命令。</p>
-<p>代码片段 0-1 在PostgreSQL数据库上创建用户和数据表：</p>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line">#使用postgres用户在pg命令行上执行下述命令</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">USER</span> dbuser2 <span class="keyword">WITH</span> PASSWORD <span class="string">&#x27;password&#x27;</span>;</span><br><span class="line"><span class="keyword">CREATE</span> DATABASE test OWNER dbuser ENCODING utf8;</span><br><span class="line"><span class="keyword">GRANT</span> <span class="keyword">ALL</span> PRIVILEGES <span class="keyword">ON</span> DATABASE test <span class="keyword">to</span> dbuser;</span><br><span class="line">#然后使用新创建的用户dbuser登录pg后执行下述命令插入记录</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> user_tbl(name <span class="type">VARCHAR</span>(<span class="number">20</span>), signup_date <span class="type">DATE</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> user_tbl(name, signup_date) <span class="keyword">VALUES</span>(<span class="string">&#x27;john&#x27;</span>, <span class="string">&#x27;2020-10-01&#x27;</span>);</span><br></pre></td></tr></table></figure>
-
-<p>（2）安装数据库驱动</p>
-<p>JMeter需要通过数据库驱动程序连接PostgreSQL数据库服务器，因此要将相关驱动文件复制到 JMeter安装目录下的 ./lib目录，并重启JMeter。JMeter从lib和lib/ext目录加载jar，更多详细信息请参阅JMeter的类路径。我们使用postgresql-42.2.23.jar[ 下载地址：<a href="https://jdbc.postgresql.org/download.html">https://jdbc.postgresql.org/download.html</a> ]作为访问PostgreSQL数据库的驱动持续。</p>
-<h2 id="添加JDBC请求组件"><a href="#添加JDBC请求组件" class="headerlink" title="添加JDBC请求组件"></a>添加JDBC请求组件</h2><p>此处略过如何添加线程组以及设置用户数，参考之前的操作步骤即可。现在我们要在测试计划中添加执行JDBC Request的JMeter组件，即“JDBC请求”取样器。<br>首先需要配置JDBC连接属性。选择“线程组”，单击鼠标右键，然后选择 添加  →  配置元件 →  JDBC Connection Configuration 。配置该元件属性，如下图所示。</p>
-<p>图 3-5-2-1 jdbc connection设置<br><img src="/images/jmeter5/jdbc/jdbc%20connection.png" alt="jdbc connection"></p>
-<p>需要设置的字段包括：</p>
-<ul>
-<li>连接池变量名称（Variable name for created pool）：JDBC取样器使用它来识别相关配置，可以是任何字符串。本示例设为postgresql。</li>
-<li>数据库地址（Database URL）：jdbc:postgresql://localhost/exampledb</li>
-<li>JDBC 驱动类（JDBC Driver class）：org.postgresql.Driver</li>
-<li>用户名（Username）：数据库的用户名。本示例中，此处为dbuser2。</li>
-<li>密码（Password）：用户名的密码。本示例中，用户dbuser2的密码是password。</li>
-<li>其他字段可以使用默认值。</li>
-<li>Validation query字段：</li>
-</ul>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Validation Query：这个有好多资料里都没说到，validationQuery must be an SQL SELECT statement, that returns at least one row。不同的数据库，所选择的Validation Query是不同的，经过外国友人的测试，具体可参照以下（postgresql选select 1）：</span><br><span class="line">hsqldb - select 1 from INFORMATION_SCHEMA.SYSTEM_USERS</span><br><span class="line">Oracle - select 1 from dual</span><br><span class="line">DB2 - select 1 from sysibm.sysdummy1</span><br><span class="line">mysql - select 1</span><br><span class="line">microsoft SQL Server - select 1 (tested on SQL-Server 9.0, 10.5 [2008])</span><br><span class="line">postgresql - select 1</span><br><span class="line">ingres - select 1</span><br><span class="line">derby - values 1</span><br><span class="line">H2 - select 1</span><br><span class="line">Firebird - select 1 from rdb$database</span><br></pre></td></tr></table></figure>
-
-<p>接着，添加JDBC请求取样器。再次选择 JDBC 用户元素，单击鼠标右键，在弹出菜单选择 添加  →  取样器  →  JDBC Request 。然后，左键选择这个新元素并修改相关配置。</p>
-<p>在我们的测试计划中，包括三个 JDBC Request取样器。第一个取样器向PostgreSQL数据库增加一行记录，第二个取样器查询记录，第三取样器清理第一个取样器插入的记录。JMeter 将按顺序将请求发送到服务器。具体配置如下。</p>
-<p>图 0-1 第一个JDBC请求取样器即执行增加记录操作的取样器:<br><img src="/images/jmeter5/jdbc/jdbc%20insert.png" alt="jdbc connection"></p>
-<p>上述为第一个请求配置面板，属性按如下设置编辑：</p>
-<ul>
-<li>将名称更改为“jdbc add”。</li>
-<li>连接池变量名称：“ postgresql”（与JDBC Connection Configuration即JDBC连接配置中的相同）</li>
-<li>设置查询类型（Query Type）为“Update Statement”</li>
-<li>SQL 查询字符串</li>
-</ul>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> user_tbl(name, signup_date) <span class="keyword">VALUES</span>(<span class="string">&#x27;mike&#x27;</span>, <span class="string">&#x27;2020-10-01&#x27;</span>);</span><br><span class="line"><span class="comment">--其中查询字符串中可以使用JMeter变量或?，如：</span></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> user_tbl(name, signup_date) <span class="keyword">VALUES</span>(<span class="string">&#x27;$&#123;name&#125;&#x27;</span>, <span class="string">&#x27;2020-10-01&#x27;</span>)</span><br><span class="line"><span class="comment">--其中name为用户定义的变量。</span></span><br><span class="line"><span class="comment">--或者：</span></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> user_tbl(name, signup_date) <span class="keyword">VALUES</span>(?, <span class="string">&#x27;2020-10-01&#x27;</span>)</span><br><span class="line"><span class="comment">--目前暂时不能使用占位符，比如VALUES(?)这样。</span></span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>在parameter values传入相关参数，在parameter types设置参数类型，均以逗号分隔。</li>
-</ul>
-<p>第二个用于查询的JDBC Request取样器如下。<br><img src="/images/jmeter5/jdbc/jdbc%20query.png" alt="jdbc add"></p>
-<p>第三个JDBC Request取样器用于清理之前插入的数据，配置如下。<br><img src="/images/jmeter5/jdbc/jdbc%20delete.png" alt="jdbc add"></p>
-<h3 id="执行和查看结果"><a href="#执行和查看结果" class="headerlink" title="执行和查看结果"></a>执行和查看结果</h3><p>在执行测试时，JMeter 使用控制面板中指定的配置创建数据库连接池。该连接池在 “JDBC Request ”中的“Variable Name of Pool declared in JDBC Connection Configuration”字段中引用。可以使用多个不同的 JDBC 配置元素，但它们必须具有唯一的名称，否则定义在后面配置将覆盖前面定义的配置。每个 JDBC Request都必须引用一个 JDBC 配置池，多个 JDBC Request可以引用同一个池。</p>
-<p>在计划中，可以添加监听器来查看/存储测试结果。</p>
-]]></content>
-      <tags>
-        <tag>JMeter</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>测试中文</title>
-    <url>/2021/08/29/%E6%B5%8B%E8%AF%95%E4%B8%AD%E6%96%87/</url>
-    <content><![CDATA[<p>测试中文。</p>
-]]></content>
-  </entry>
-  <entry>
     <title>使用pyecharts绘制系统依赖关系图</title>
     <url>/2021/09/05/%E4%BD%BF%E7%94%A8pyecharts%E7%BB%98%E5%88%B6%E7%B3%BB%E7%BB%9F%E4%BE%9D%E8%B5%96%E5%85%B3%E7%B3%BB%E5%9B%BE/</url>
     <content><![CDATA[<h2 id="背景介绍"><a href="#背景介绍" class="headerlink" title="背景介绍"></a>背景介绍</h2><p>近期梳理了公司内部系统之间的数据关系，得到了多个excel格式的统计文件，每个文件包含了该系统自身数据清单、依赖的其他系统的数据清单、对其他系统供应的数据清单。<br>各系统之间依赖关系复杂，所以我想使用一些绘图工具，以可视化图形图表的形式展现这些系统之间的数据关系，给观众形成一种非常直观的印象。</p>
@@ -226,6 +75,157 @@
         <tag>pyecharts</tag>
         <tag>python</tag>
         <tag>可视化</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>测试中文</title>
+    <url>/2021/08/29/%E6%B5%8B%E8%AF%95%E4%B8%AD%E6%96%87/</url>
+    <content><![CDATA[<p>测试中文。</p>
+]]></content>
+  </entry>
+  <entry>
+    <title>使用JMeter5测试PostgreSQL数据库</title>
+    <url>/2021/08/29/%E4%BD%BF%E7%94%A8JMeter5%E6%B5%8B%E8%AF%95PostgreSQL%E6%95%B0%E6%8D%AE%E5%BA%93/</url>
+    <content><![CDATA[<p>在本节中，我们使用“JDBC请求”取样器组件来测试PostgreSQL数据库服务器。其他需使用的组件包括 线程组、 JDBC请求、摘要报告。对于MySQL或其他可以通过JDBC驱动连接的数据库，方法是类似的。</p>
+<h2 id="准备测试环境"><a href="#准备测试环境" class="headerlink" title="准备测试环境"></a>准备测试环境</h2><p>本示例中JMeter与PostgreSQL运行在同一台机器，使用Java 11，PostgreSQL版本是13.4。</p>
+<p>（1）准备数据库</p>
+<p>首先需要安装PostgreSQL数据库（后面简称PG），请参考官方安装说明[ pg下载地址：<a href="https://www.postgresql.org/download/">https://www.postgresql.org/download/</a> ]，选择相符的操作系统，下载和安装PG。完成安装后，我们在PostgreSQL中创建数据库，并在该库下创建数据表以及创建相关用户。</p>
+<p>本示例中创建数据库为“exampledb”，表名称为“user_tbl”。下表为相关sql命令。</p>
+<p>代码片段 0-1 在PostgreSQL数据库上创建用户和数据表：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line">#使用postgres用户在pg命令行上执行下述命令</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">USER</span> dbuser2 <span class="keyword">WITH</span> PASSWORD <span class="string">&#x27;password&#x27;</span>;</span><br><span class="line"><span class="keyword">CREATE</span> DATABASE test OWNER dbuser ENCODING utf8;</span><br><span class="line"><span class="keyword">GRANT</span> <span class="keyword">ALL</span> PRIVILEGES <span class="keyword">ON</span> DATABASE test <span class="keyword">to</span> dbuser;</span><br><span class="line">#然后使用新创建的用户dbuser登录pg后执行下述命令插入记录</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> user_tbl(name <span class="type">VARCHAR</span>(<span class="number">20</span>), signup_date <span class="type">DATE</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> user_tbl(name, signup_date) <span class="keyword">VALUES</span>(<span class="string">&#x27;john&#x27;</span>, <span class="string">&#x27;2020-10-01&#x27;</span>);</span><br></pre></td></tr></table></figure>
+
+<p>（2）安装数据库驱动</p>
+<p>JMeter需要通过数据库驱动程序连接PostgreSQL数据库服务器，因此要将相关驱动文件复制到 JMeter安装目录下的 ./lib目录，并重启JMeter。JMeter从lib和lib/ext目录加载jar，更多详细信息请参阅JMeter的类路径。我们使用postgresql-42.2.23.jar[ 下载地址：<a href="https://jdbc.postgresql.org/download.html">https://jdbc.postgresql.org/download.html</a> ]作为访问PostgreSQL数据库的驱动持续。</p>
+<h2 id="添加JDBC请求组件"><a href="#添加JDBC请求组件" class="headerlink" title="添加JDBC请求组件"></a>添加JDBC请求组件</h2><p>此处略过如何添加线程组以及设置用户数，参考之前的操作步骤即可。现在我们要在测试计划中添加执行JDBC Request的JMeter组件，即“JDBC请求”取样器。<br>首先需要配置JDBC连接属性。选择“线程组”，单击鼠标右键，然后选择 添加  →  配置元件 →  JDBC Connection Configuration 。配置该元件属性，如下图所示。</p>
+<p>图 3-5-2-1 jdbc connection设置<br><img src="/images/jmeter5/jdbc/jdbc%20connection.png" alt="jdbc connection"></p>
+<p>需要设置的字段包括：</p>
+<ul>
+<li>连接池变量名称（Variable name for created pool）：JDBC取样器使用它来识别相关配置，可以是任何字符串。本示例设为postgresql。</li>
+<li>数据库地址（Database URL）：jdbc:postgresql://localhost/exampledb</li>
+<li>JDBC 驱动类（JDBC Driver class）：org.postgresql.Driver</li>
+<li>用户名（Username）：数据库的用户名。本示例中，此处为dbuser2。</li>
+<li>密码（Password）：用户名的密码。本示例中，用户dbuser2的密码是password。</li>
+<li>其他字段可以使用默认值。</li>
+<li>Validation query字段：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Validation Query：这个有好多资料里都没说到，validationQuery must be an SQL SELECT statement, that returns at least one row。不同的数据库，所选择的Validation Query是不同的，经过外国友人的测试，具体可参照以下（postgresql选select 1）：</span><br><span class="line">hsqldb - select 1 from INFORMATION_SCHEMA.SYSTEM_USERS</span><br><span class="line">Oracle - select 1 from dual</span><br><span class="line">DB2 - select 1 from sysibm.sysdummy1</span><br><span class="line">mysql - select 1</span><br><span class="line">microsoft SQL Server - select 1 (tested on SQL-Server 9.0, 10.5 [2008])</span><br><span class="line">postgresql - select 1</span><br><span class="line">ingres - select 1</span><br><span class="line">derby - values 1</span><br><span class="line">H2 - select 1</span><br><span class="line">Firebird - select 1 from rdb$database</span><br></pre></td></tr></table></figure>
+
+<p>接着，添加JDBC请求取样器。再次选择 JDBC 用户元素，单击鼠标右键，在弹出菜单选择 添加  →  取样器  →  JDBC Request 。然后，左键选择这个新元素并修改相关配置。</p>
+<p>在我们的测试计划中，包括三个 JDBC Request取样器。第一个取样器向PostgreSQL数据库增加一行记录，第二个取样器查询记录，第三取样器清理第一个取样器插入的记录。JMeter 将按顺序将请求发送到服务器。具体配置如下。</p>
+<p>图 0-1 第一个JDBC请求取样器即执行增加记录操作的取样器:<br><img src="/images/jmeter5/jdbc/jdbc%20insert.png" alt="jdbc connection"></p>
+<p>上述为第一个请求配置面板，属性按如下设置编辑：</p>
+<ul>
+<li>将名称更改为“jdbc add”。</li>
+<li>连接池变量名称：“ postgresql”（与JDBC Connection Configuration即JDBC连接配置中的相同）</li>
+<li>设置查询类型（Query Type）为“Update Statement”</li>
+<li>SQL 查询字符串</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> user_tbl(name, signup_date) <span class="keyword">VALUES</span>(<span class="string">&#x27;mike&#x27;</span>, <span class="string">&#x27;2020-10-01&#x27;</span>);</span><br><span class="line"><span class="comment">--其中查询字符串中可以使用JMeter变量或?，如：</span></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> user_tbl(name, signup_date) <span class="keyword">VALUES</span>(<span class="string">&#x27;$&#123;name&#125;&#x27;</span>, <span class="string">&#x27;2020-10-01&#x27;</span>)</span><br><span class="line"><span class="comment">--其中name为用户定义的变量。</span></span><br><span class="line"><span class="comment">--或者：</span></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> user_tbl(name, signup_date) <span class="keyword">VALUES</span>(?, <span class="string">&#x27;2020-10-01&#x27;</span>)</span><br><span class="line"><span class="comment">--目前暂时不能使用占位符，比如VALUES(?)这样。</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>在parameter values传入相关参数，在parameter types设置参数类型，均以逗号分隔。</li>
+</ul>
+<p>第二个用于查询的JDBC Request取样器如下。<br><img src="/images/jmeter5/jdbc/jdbc%20query.png" alt="jdbc add"></p>
+<p>第三个JDBC Request取样器用于清理之前插入的数据，配置如下。<br><img src="/images/jmeter5/jdbc/jdbc%20delete.png" alt="jdbc add"></p>
+<h3 id="执行和查看结果"><a href="#执行和查看结果" class="headerlink" title="执行和查看结果"></a>执行和查看结果</h3><p>在执行测试时，JMeter 使用控制面板中指定的配置创建数据库连接池。该连接池在 “JDBC Request ”中的“Variable Name of Pool declared in JDBC Connection Configuration”字段中引用。可以使用多个不同的 JDBC 配置元素，但它们必须具有唯一的名称，否则定义在后面配置将覆盖前面定义的配置。每个 JDBC Request都必须引用一个 JDBC 配置池，多个 JDBC Request可以引用同一个池。</p>
+<p>在计划中，可以添加监听器来查看/存储测试结果。</p>
+]]></content>
+      <tags>
+        <tag>JMeter</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>JMeter5之使用JDBC取样器测试数据库</title>
+    <url>/2021/08/28/JMeter5%E4%B9%8B%E4%BD%BF%E7%94%A8JDBC%E5%8F%96%E6%A0%B7%E5%99%A8%E6%B5%8B%E8%AF%95%E6%95%B0%E6%8D%AE%E5%BA%93/</url>
+    <content><![CDATA[<p>在本节中，我们使用“JDBC请求”取样器组件来测试PostgreSQL数据库服务器。其他需使用的组件包括 线程组、 JDBC请求、摘要报告。对于MySQL或其他可以通过JDBC驱动连接的数据库，方法是类似的。</p>
+<h2 id="准备测试环境"><a href="#准备测试环境" class="headerlink" title="准备测试环境"></a>准备测试环境</h2><p>本示例中JMeter与PostgreSQL运行在同一台机器，使用Java 11，PostgreSQL版本是13.4。</p>
+<p>（1）准备数据库</p>
+<p>首先需要安装PostgreSQL数据库（后面简称PG），请参考官方安装说明[ pg下载地址：<a href="https://www.postgresql.org/download/">https://www.postgresql.org/download/</a> ]，选择相符的操作系统，下载和安装PG。完成安装后，我们在PostgreSQL中创建数据库，并在该库下创建数据表以及创建相关用户。</p>
+<p>本示例中创建数据库为“exampledb”，表名称为“user_tbl”。下表为相关sql命令。</p>
+<p>代码片段 0-1 在PostgreSQL数据库上创建用户和数据表：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line">#使用postgres用户在pg命令行上执行下述命令</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">USER</span> dbuser2 <span class="keyword">WITH</span> PASSWORD <span class="string">&#x27;password&#x27;</span>;</span><br><span class="line"><span class="keyword">CREATE</span> DATABASE test OWNER dbuser ENCODING utf8;</span><br><span class="line"><span class="keyword">GRANT</span> <span class="keyword">ALL</span> PRIVILEGES <span class="keyword">ON</span> DATABASE test <span class="keyword">to</span> dbuser;</span><br><span class="line">#然后使用新创建的用户dbuser登录pg后执行下述命令插入记录</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> user_tbl(name <span class="type">VARCHAR</span>(<span class="number">20</span>), signup_date <span class="type">DATE</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> user_tbl(name, signup_date) <span class="keyword">VALUES</span>(<span class="string">&#x27;john&#x27;</span>, <span class="string">&#x27;2020-10-01&#x27;</span>);</span><br></pre></td></tr></table></figure>
+
+<p>（2）安装数据库驱动</p>
+<p>JMeter需要通过数据库驱动程序连接PostgreSQL数据库服务器，因此要将相关驱动文件复制到 JMeter安装目录下的 ./lib目录，并重启JMeter。JMeter从lib和lib/ext目录加载jar，更多详细信息请参阅JMeter的类路径。我们使用postgresql-42.2.23.jar[ 下载地址：<a href="https://jdbc.postgresql.org/download.html">https://jdbc.postgresql.org/download.html</a> ]作为访问PostgreSQL数据库的驱动持续。</p>
+<h2 id="添加JDBC请求组件"><a href="#添加JDBC请求组件" class="headerlink" title="添加JDBC请求组件"></a>添加JDBC请求组件</h2><p>此处略过如何添加线程组以及设置用户数，参考之前的操作步骤即可。现在我们要在测试计划中添加执行JDBC Request的JMeter组件，即“JDBC请求”取样器。<br>首先需要配置JDBC连接属性。选择“线程组”，单击鼠标右键，然后选择 添加  →  配置元件 →  JDBC Connection Configuration 。配置该元件属性，如下图所示。</p>
+<p>图 3-5-2-1 jdbc connection设置<br><img src="/images/jmeter5/jdbc/jdbc%20connection.png" alt="jdbc connection"></p>
+<p>需要设置的字段包括：</p>
+<ul>
+<li>连接池变量名称（Variable name for created pool）：JDBC取样器使用它来识别相关配置，可以是任何字符串。本示例设为postgresql。</li>
+<li>数据库地址（Database URL）：jdbc:postgresql://localhost/exampledb</li>
+<li>JDBC 驱动类（JDBC Driver class）：org.postgresql.Driver</li>
+<li>用户名（Username）：数据库的用户名。本示例中，此处为dbuser2。</li>
+<li>密码（Password）：用户名的密码。本示例中，用户dbuser2的密码是password。</li>
+<li>其他字段可以使用默认值。</li>
+<li>Validation query字段：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Validation Query：这个有好多资料里都没说到，validationQuery must be an SQL SELECT statement, that returns at least one row。不同的数据库，所选择的Validation Query是不同的，经过外国友人的测试，具体可参照以下（postgresql选select 1）：</span><br><span class="line">hsqldb - select 1 from INFORMATION_SCHEMA.SYSTEM_USERS</span><br><span class="line">Oracle - select 1 from dual</span><br><span class="line">DB2 - select 1 from sysibm.sysdummy1</span><br><span class="line">mysql - select 1</span><br><span class="line">microsoft SQL Server - select 1 (tested on SQL-Server 9.0, 10.5 [2008])</span><br><span class="line">postgresql - select 1</span><br><span class="line">ingres - select 1</span><br><span class="line">derby - values 1</span><br><span class="line">H2 - select 1</span><br><span class="line">Firebird - select 1 from rdb$database</span><br></pre></td></tr></table></figure>
+
+<p>接着，添加JDBC请求取样器。再次选择 JDBC 用户元素，单击鼠标右键，在弹出菜单选择 添加  →  取样器  →  JDBC Request 。然后，左键选择这个新元素并修改相关配置。</p>
+<p>在我们的测试计划中，包括三个 JDBC Request取样器。第一个取样器向PostgreSQL数据库增加一行记录，第二个取样器查询记录，第三取样器清理第一个取样器插入的记录。JMeter 将按顺序将请求发送到服务器。具体配置如下。</p>
+<p>图 0-1 第一个JDBC请求取样器即执行增加记录操作的取样器:<br><img src="/images/jmeter5/jdbc/jdbc%20insert.png" alt="jdbc connection"></p>
+<p>上述为第一个请求配置面板，属性按如下设置编辑：</p>
+<ul>
+<li>将名称更改为“jdbc add”。</li>
+<li>连接池变量名称：“ postgresql”（与JDBC Connection Configuration即JDBC连接配置中的相同）</li>
+<li>设置查询类型（Query Type）为“Update Statement”</li>
+<li>SQL 查询字符串</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> user_tbl(name, signup_date) <span class="keyword">VALUES</span>(<span class="string">&#x27;mike&#x27;</span>, <span class="string">&#x27;2020-10-01&#x27;</span>);</span><br><span class="line"><span class="comment">--其中查询字符串中可以使用JMeter变量或?，如：</span></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> user_tbl(name, signup_date) <span class="keyword">VALUES</span>(<span class="string">&#x27;$&#123;name&#125;&#x27;</span>, <span class="string">&#x27;2020-10-01&#x27;</span>)</span><br><span class="line"><span class="comment">--其中name为用户定义的变量。</span></span><br><span class="line"><span class="comment">--或者：</span></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> user_tbl(name, signup_date) <span class="keyword">VALUES</span>(?, <span class="string">&#x27;2020-10-01&#x27;</span>)</span><br><span class="line"><span class="comment">--目前暂时不能使用占位符，比如VALUES(?)这样。</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>在parameter values传入相关参数，在parameter types设置参数类型，均以逗号分隔。</li>
+</ul>
+<p>第二个用于查询的JDBC Request取样器如下。<br><img src="/images/jmeter5/jdbc/jdbc%20query.png" alt="jdbc add"></p>
+<p>第三个JDBC Request取样器用于清理之前插入的数据，配置如下。<br><img src="/images/jmeter5/jdbc/jdbc%20delete.png" alt="jdbc add"></p>
+<h3 id="执行和查看结果"><a href="#执行和查看结果" class="headerlink" title="执行和查看结果"></a>执行和查看结果</h3><p>在执行测试时，JMeter 使用控制面板中指定的配置创建数据库连接池。该连接池在 “JDBC Request ”中的“Variable Name of Pool declared in JDBC Connection Configuration”字段中引用。可以使用多个不同的 JDBC 配置元素，但它们必须具有唯一的名称，否则定义在后面配置将覆盖前面定义的配置。每个 JDBC Request都必须引用一个 JDBC 配置池，多个 JDBC Request可以引用同一个池。</p>
+<p>在计划中，可以添加监听器来查看/存储测试结果。</p>
+]]></content>
+      <tags>
+        <tag>JMeter</tag>
+        <tag>JMeter5</tag>
+        <tag>JDBC</tag>
+        <tag>Database</tag>
+        <tag>Test</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Hello World</title>
+    <url>/2021/08/26/hello-world/</url>
+    <content><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
+<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p>
+<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
+
+<p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p>
+<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
+
+<p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p>
+<span id="more"></span>
+
+<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
+
+<p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
+]]></content>
+      <categories>
+        <category>helloworld</category>
+      </categories>
+      <tags>
+        <tag>helloworld</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>TestIt</title>
+    <url>/2021/08/23/TestIt/</url>
+    <content><![CDATA[<h1 id="Test-it"><a href="#Test-it" class="headerlink" title="Test it"></a>Test it</h1><h2 id="header-1"><a href="#header-1" class="headerlink" title="header 1"></a>header 1</h2><h3 id="header-2"><a href="#header-2" class="headerlink" title="header 2"></a>header 2</h3><h4 id="hader-3"><a href="#hader-3" class="headerlink" title="hader 3"></a>hader 3</h4><p>Hllo, I’m testing it.</p>
+<p><img src="/images/pasted-0.png" alt="upload successful"></p>
+<span id="more"></span>]]></content>
+      <categories>
+        <category>test</category>
+      </categories>
+      <tags>
+        <tag>test</tag>
       </tags>
   </entry>
 </search>
