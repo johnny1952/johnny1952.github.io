@@ -73,6 +73,13 @@
 <li><a href="https://github.com/apache/jmeter/blob/master/gradle.md">https://github.com/apache/jmeter/blob/master/gradle.md</a> 官方构建说明，可以找到关于不同构建命令的说明</li>
 </ul>
 ]]></content>
+      <categories>
+        <category>jmeter</category>
+      </categories>
+      <tags>
+        <tag>jmeter</tag>
+        <tag>debug</tag>
+      </tags>
   </entry>
   <entry>
     <title>使用pyecharts绘制系统依赖关系图</title>
