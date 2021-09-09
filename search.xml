@@ -1,87 +1,84 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>Hello World</title>
-    <url>/2021/08/26/hello-world/</url>
-    <content><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
+    <title>调试JMeter5源码</title>
+    <url>/2021/09/08/%E8%B0%83%E8%AF%95JMeter5%E6%BA%90%E7%A0%81/</url>
+    <content><![CDATA[<h1 id="JMeter源码的开发调试"><a href="#JMeter源码的开发调试" class="headerlink" title="JMeter源码的开发调试"></a>JMeter源码的开发调试</h1><h2 id="说明"><a href="#说明" class="headerlink" title="说明"></a>说明</h2><p>本文编译这部分内容基本来源于网上。debug相关内容为本人根据实际情况整理。</p>
+<p>JMeter5.2开始，使用gradle代替了原来ant，所以基于源码的本地环境搭建略有不同。JMeter 5.4.1使用的gradle文件不是build.gradle文件，而是build.gradle.kts。</p>
+<h2 id="所需环境"><a href="#所需环境" class="headerlink" title="所需环境"></a>所需环境</h2><ul>
+<li>JDK 8 +</li>
+<li>JMeter 源码（本例使用的是5.4.1版本）</li>
+<li>IntelliJ IDEA / Eclipse：本例使用IntelliJ IDEA CE 2020.3来构建本地开发环境（IDEA版本需要&gt;=2018.3.1）</li>
+</ul>
+<h2 id="编译"><a href="#编译" class="headerlink" title="编译"></a>编译</h2><p>下面是在IDEA打开JMeter工程的步骤说明。</p>
+<ol>
+<li><p>启动idea，点击File -&gt; open，选中jmeter源码目录下build.gradle.kts</p>
+</li>
+<li><p>选择“Open as Project”</p>
+</li>
+<li><p>确保“Create separate module per source set” 和 “Use default gradle wrapper”选中，然后点击ok。（这两项不一定会有，可能和IDEA版本有关）</p>
+</li>
+</ol>
+<p>随后idea会自动开始下载JMeter所需依赖，等待执行完成。</p>
+<p><strong>注意 这里不要对Gradle设置阿里云镜像，否则会出现依赖加载不成功，在checksum时，会有部分依赖报错，开始前建议暂时取消Gradle的镜像。</strong></p>
+<blockquote>
+<p>为了不使用ali的gradle仓库，我把~/.gradle下的init.gradle（使用了ali的gradle库）重命名为init.gradle.bak了，这样gradle在运行的时候不再使用ali的库。</p>
+</blockquote>
+<p>依赖下载完成后，所需的依赖是在gradle的cache目录下，我们需要执行命令打包构建，将所需的依赖复制一份到jmeter源码目录的lib目录下。在Terminal中执行（gradle需要先配置环境变量）<code>gradlew runGui</code>。或在gradle任务下的developement下执行runGUI，以便在工程根目录下的lib下生成相关jar。</p>
+<p>执行完成后，会打开构建好的jmeter GUI界面。查看lib目录，jar包也已复制完成。在调试之前，先关闭打开的JMeter界面。</p>
+<h2 id="在IDEA中debug源码"><a href="#在IDEA中debug源码" class="headerlink" title="在IDEA中debug源码"></a>在IDEA中debug源码</h2><p>下面是debug设置的操作说明：</p>
+<ol>
+<li><p>在IDEA中，快捷键cmd+shift+f或double shift（mac电脑），搜索找到NewDriver类。</p>
+</li>
+<li><p>点击小锤子旁边的 Add Configuration…</p>
+</li>
+<li><p>增加Application设置，在VM options中加入 -Djmeter.home=xxx（JMeter源码目录），点击ok。</p>
+</li>
+</ol>
+<p>对于jmeter 5.4.1 ，为了debug jmeter，我是这样设置的:</p>
+<ol>
+<li>修改run configuration如下：</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">vm option：</span><br><span class="line">-Djmeter.home=/Users/lizhiqiang/Test/src/jmeter -cp .;/Users/lizhiqiang/Test/src/jmeter</span><br><span class="line"></span><br><span class="line">classname：</span><br><span class="line">org.apache.jmeter.NewDriver</span><br><span class="line"></span><br><span class="line">environment variables:</span><br><span class="line">JMETER_HOME=/Users/lizhiqiang/Test/src/jmeter</span><br></pre></td></tr></table></figure>
 
-<p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
+<ol start="2">
+<li><p>生成lib下相关jar（<strong>如果之前已经执行过runGUI，不需要再执行</strong>）</p>
+</li>
+<li><p>修改代码</p>
+</li>
+</ol>
+<p>因为代码逻辑设定，所以为了启动debug，需要修改少量代码。如果不修改代码，debug的时候会报错。因此在line 87行添加一行：<code>tmpDir = null; //lizhiqiang debug</code>。（可能是我的野路子）。记得这行代码在正式发布的时候去除或注释掉！</p>
+<p>修改后这段代码是这样的：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">tmpDir = <span class="keyword">null</span>; <span class="comment">//lizhiqiang debug</span></span><br><span class="line"><span class="keyword">if</span> (tmpDir == <span class="keyword">null</span>) &#123;</span><br><span class="line">    tmpDir = System.getenv(<span class="string">&quot;JMETER_HOME&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
+<p>这样，程序将使用环境变量JMETER_HOME定义的目录.</p>
+<ol start="4">
+<li>点击debug按钮，运行代码，随后会启动JMeter的GUI了，接下来我们就可以在想了解功能上，打断点或者修改源码，调试JMeter。</li>
+</ol>
+<h2 id="debug时相关错误"><a href="#debug时相关错误" class="headerlink" title="debug时相关错误"></a>debug时相关错误</h2><p>尝试使用过下面的命令，但可能都不是正确的方式，因为后面尝试了都不能将jmeter启动起来，最终还是按照之前提过的方法，不实用ali的仓库进行构建。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">检查校验和：构建完成后才检查校验和</span></span><br><span class="line">./gradlew clean build -Djava.awt.headless=true -PchecksumFailOn=build_finish</span><br><span class="line">-PchecksumFailOn=build_finish</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash">不检查校验和，也不测试</span></span><br><span class="line">./gradlew clean build -Djava.awt.headless=true -PchecksumIgnore -x test</span><br></pre></td></tr></table></figure>
 
-<p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p>
-<span id="more"></span>
+<p>下面是默认执行<code>gradle build</code>时出现的错误。这些校验和相关的错误要解决，否则可能后面还是不能运行成功。解决的方法在前面提过，就是不要使用ali的仓库（至少在我的实践看来是这样的。原因可能还是因为某些依赖的包不再ali的仓库里）：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">错误信息：</span><br><span class="line">Checksum/PGP violations detected on resolving configuration :src:testkit-wiremock:compileClasspath</span><br><span class="line">  No PGP signature (.asc file) found for artifact:</span><br><span class="line"></span><br></pre></td></tr></table></figure>
 
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
+<p>下面的错误不记得是如何消除的了，但比较确定的一点是，没有checksum相关的错误后，下面的错误也没了：</p>
+<ul>
+<li>jmeter Caused by: java.io.FileNotFoundException:   subprojects/configuration-cache/src/main/kotlin (Is a directory)</li>
+<li>其他一些错误：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Create separate module per source set</span><br><span class="line">Task :src:components:autostyleJavaCheck FAILED</span><br><span class="line">src:bshclient:autostyleJavaCheck FAILED</span><br><span class="line"> Task :src:testkit-wiremock:compileJava FAILED</span><br><span class="line">java/org/apache/jorphan/gui/DynamicStyle.java使用了未经检查或不安全的操作</span><br></pre></td></tr></table></figure>
 
-<p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>构建文档：</p>
+<ul>
+<li><a href="https://github.com/apache/jmeter/blob/master/gradle.md">https://github.com/apache/jmeter/blob/master/gradle.md</a> 官方构建说明，可以找到关于不同构建命令的说明</li>
+</ul>
 ]]></content>
       <categories>
-        <category>helloworld</category>
+        <category>jmeter</category>
       </categories>
       <tags>
-        <tag>helloworld</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>使用JMeter5测试PostgreSQL数据库</title>
-    <url>/2021/08/29/%E4%BD%BF%E7%94%A8JMeter5%E6%B5%8B%E8%AF%95PostgreSQL%E6%95%B0%E6%8D%AE%E5%BA%93/</url>
-    <content><![CDATA[<p>在本节中，我们使用“JDBC请求”取样器组件来测试PostgreSQL数据库服务器。其他需使用的组件包括 线程组、 JDBC请求、摘要报告。对于MySQL或其他可以通过JDBC驱动连接的数据库，方法是类似的。</p>
-<h2 id="准备测试环境"><a href="#准备测试环境" class="headerlink" title="准备测试环境"></a>准备测试环境</h2><p>本示例中JMeter与PostgreSQL运行在同一台机器，使用Java 11，PostgreSQL版本是13.4。</p>
-<p>（1）准备数据库</p>
-<p>首先需要安装PostgreSQL数据库（后面简称PG），请参考官方安装说明[ pg下载地址：<a href="https://www.postgresql.org/download/">https://www.postgresql.org/download/</a> ]，选择相符的操作系统，下载和安装PG。完成安装后，我们在PostgreSQL中创建数据库，并在该库下创建数据表以及创建相关用户。</p>
-<p>本示例中创建数据库为“exampledb”，表名称为“user_tbl”。下表为相关sql命令。</p>
-<p>代码片段 0-1 在PostgreSQL数据库上创建用户和数据表：</p>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line">#使用postgres用户在pg命令行上执行下述命令</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">USER</span> dbuser2 <span class="keyword">WITH</span> PASSWORD <span class="string">&#x27;password&#x27;</span>;</span><br><span class="line"><span class="keyword">CREATE</span> DATABASE test OWNER dbuser ENCODING utf8;</span><br><span class="line"><span class="keyword">GRANT</span> <span class="keyword">ALL</span> PRIVILEGES <span class="keyword">ON</span> DATABASE test <span class="keyword">to</span> dbuser;</span><br><span class="line">#然后使用新创建的用户dbuser登录pg后执行下述命令插入记录</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> user_tbl(name <span class="type">VARCHAR</span>(<span class="number">20</span>), signup_date <span class="type">DATE</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> user_tbl(name, signup_date) <span class="keyword">VALUES</span>(<span class="string">&#x27;john&#x27;</span>, <span class="string">&#x27;2020-10-01&#x27;</span>);</span><br></pre></td></tr></table></figure>
-
-<p>（2）安装数据库驱动</p>
-<p>JMeter需要通过数据库驱动程序连接PostgreSQL数据库服务器，因此要将相关驱动文件复制到 JMeter安装目录下的 ./lib目录，并重启JMeter。JMeter从lib和lib/ext目录加载jar，更多详细信息请参阅JMeter的类路径。我们使用postgresql-42.2.23.jar[ 下载地址：<a href="https://jdbc.postgresql.org/download.html">https://jdbc.postgresql.org/download.html</a> ]作为访问PostgreSQL数据库的驱动持续。</p>
-<h2 id="添加JDBC请求组件"><a href="#添加JDBC请求组件" class="headerlink" title="添加JDBC请求组件"></a>添加JDBC请求组件</h2><p>此处略过如何添加线程组以及设置用户数，参考之前的操作步骤即可。现在我们要在测试计划中添加执行JDBC Request的JMeter组件，即“JDBC请求”取样器。<br>首先需要配置JDBC连接属性。选择“线程组”，单击鼠标右键，然后选择 添加  →  配置元件 →  JDBC Connection Configuration 。配置该元件属性，如下图所示。</p>
-<p>图 3-5-2-1 jdbc connection设置<br><img src="/images/jmeter5/jdbc/jdbc%20connection.png" alt="jdbc connection"></p>
-<p>需要设置的字段包括：</p>
-<ul>
-<li>连接池变量名称（Variable name for created pool）：JDBC取样器使用它来识别相关配置，可以是任何字符串。本示例设为postgresql。</li>
-<li>数据库地址（Database URL）：jdbc:postgresql://localhost/exampledb</li>
-<li>JDBC 驱动类（JDBC Driver class）：org.postgresql.Driver</li>
-<li>用户名（Username）：数据库的用户名。本示例中，此处为dbuser2。</li>
-<li>密码（Password）：用户名的密码。本示例中，用户dbuser2的密码是password。</li>
-<li>其他字段可以使用默认值。</li>
-<li>Validation query字段：</li>
-</ul>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Validation Query：这个有好多资料里都没说到，validationQuery must be an SQL SELECT statement, that returns at least one row。不同的数据库，所选择的Validation Query是不同的，经过外国友人的测试，具体可参照以下（postgresql选select 1）：</span><br><span class="line">hsqldb - select 1 from INFORMATION_SCHEMA.SYSTEM_USERS</span><br><span class="line">Oracle - select 1 from dual</span><br><span class="line">DB2 - select 1 from sysibm.sysdummy1</span><br><span class="line">mysql - select 1</span><br><span class="line">microsoft SQL Server - select 1 (tested on SQL-Server 9.0, 10.5 [2008])</span><br><span class="line">postgresql - select 1</span><br><span class="line">ingres - select 1</span><br><span class="line">derby - values 1</span><br><span class="line">H2 - select 1</span><br><span class="line">Firebird - select 1 from rdb$database</span><br></pre></td></tr></table></figure>
-
-<p>接着，添加JDBC请求取样器。再次选择 JDBC 用户元素，单击鼠标右键，在弹出菜单选择 添加  →  取样器  →  JDBC Request 。然后，左键选择这个新元素并修改相关配置。</p>
-<p>在我们的测试计划中，包括三个 JDBC Request取样器。第一个取样器向PostgreSQL数据库增加一行记录，第二个取样器查询记录，第三取样器清理第一个取样器插入的记录。JMeter 将按顺序将请求发送到服务器。具体配置如下。</p>
-<p>图 0-1 第一个JDBC请求取样器即执行增加记录操作的取样器:<br><img src="/images/jmeter5/jdbc/jdbc%20insert.png" alt="jdbc connection"></p>
-<p>上述为第一个请求配置面板，属性按如下设置编辑：</p>
-<ul>
-<li>将名称更改为“jdbc add”。</li>
-<li>连接池变量名称：“ postgresql”（与JDBC Connection Configuration即JDBC连接配置中的相同）</li>
-<li>设置查询类型（Query Type）为“Update Statement”</li>
-<li>SQL 查询字符串</li>
-</ul>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> user_tbl(name, signup_date) <span class="keyword">VALUES</span>(<span class="string">&#x27;mike&#x27;</span>, <span class="string">&#x27;2020-10-01&#x27;</span>);</span><br><span class="line"><span class="comment">--其中查询字符串中可以使用JMeter变量或?，如：</span></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> user_tbl(name, signup_date) <span class="keyword">VALUES</span>(<span class="string">&#x27;$&#123;name&#125;&#x27;</span>, <span class="string">&#x27;2020-10-01&#x27;</span>)</span><br><span class="line"><span class="comment">--其中name为用户定义的变量。</span></span><br><span class="line"><span class="comment">--或者：</span></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> user_tbl(name, signup_date) <span class="keyword">VALUES</span>(?, <span class="string">&#x27;2020-10-01&#x27;</span>)</span><br><span class="line"><span class="comment">--目前暂时不能使用占位符，比如VALUES(?)这样。</span></span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>在parameter values传入相关参数，在parameter types设置参数类型，均以逗号分隔。</li>
-</ul>
-<p>第二个用于查询的JDBC Request取样器如下。<br><img src="/images/jmeter5/jdbc/jdbc%20query.png" alt="jdbc add"></p>
-<p>第三个JDBC Request取样器用于清理之前插入的数据，配置如下。<br><img src="/images/jmeter5/jdbc/jdbc%20delete.png" alt="jdbc add"></p>
-<h3 id="执行和查看结果"><a href="#执行和查看结果" class="headerlink" title="执行和查看结果"></a>执行和查看结果</h3><p>在执行测试时，JMeter 使用控制面板中指定的配置创建数据库连接池。该连接池在 “JDBC Request ”中的“Variable Name of Pool declared in JDBC Connection Configuration”字段中引用。可以使用多个不同的 JDBC 配置元素，但它们必须具有唯一的名称，否则定义在后面配置将覆盖前面定义的配置。每个 JDBC Request都必须引用一个 JDBC 配置池，多个 JDBC Request可以引用同一个池。</p>
-<p>在计划中，可以添加监听器来查看/存储测试结果。</p>
-]]></content>
-      <categories>
-        <category>JMeter</category>
-      </categories>
-      <tags>
-        <tag>JMeter</tag>
-        <tag>JMeter5</tag>
-        <tag>JDBC</tag>
-        <tag>Database</tag>
-        <tag>Test</tag>
+        <tag>jmeter</tag>
+        <tag>debug</tag>
       </tags>
   </entry>
   <entry>
@@ -162,84 +159,87 @@
       </tags>
   </entry>
   <entry>
-    <title>调试JMeter5源码</title>
-    <url>/2021/09/08/%E8%B0%83%E8%AF%95JMeter5%E6%BA%90%E7%A0%81/</url>
-    <content><![CDATA[<h1 id="JMeter源码的开发调试"><a href="#JMeter源码的开发调试" class="headerlink" title="JMeter源码的开发调试"></a>JMeter源码的开发调试</h1><h2 id="说明"><a href="#说明" class="headerlink" title="说明"></a>说明</h2><p>本文编译这部分内容基本来源于网上。debug相关内容为本人根据实际情况整理。</p>
-<p>JMeter5.2开始，使用gradle代替了原来ant，所以基于源码的本地环境搭建略有不同。JMeter 5.4.1使用的gradle文件不是build.gradle文件，而是build.gradle.kts。</p>
-<h2 id="所需环境"><a href="#所需环境" class="headerlink" title="所需环境"></a>所需环境</h2><ul>
-<li>JDK 8 +</li>
-<li>JMeter 源码（本例使用的是5.4.1版本）</li>
-<li>IntelliJ IDEA / Eclipse：本例使用IntelliJ IDEA CE 2020.3来构建本地开发环境（IDEA版本需要&gt;=2018.3.1）</li>
-</ul>
-<h2 id="编译"><a href="#编译" class="headerlink" title="编译"></a>编译</h2><p>下面是在IDEA打开JMeter工程的步骤说明。</p>
-<ol>
-<li><p>启动idea，点击File -&gt; open，选中jmeter源码目录下build.gradle.kts</p>
-</li>
-<li><p>选择“Open as Project”</p>
-</li>
-<li><p>确保“Create separate module per source set” 和 “Use default gradle wrapper”选中，然后点击ok。（这两项不一定会有，可能和IDEA版本有关）</p>
-</li>
-</ol>
-<p>随后idea会自动开始下载JMeter所需依赖，等待执行完成。</p>
-<p><strong>注意 这里不要对Gradle设置阿里云镜像，否则会出现依赖加载不成功，在checksum时，会有部分依赖报错，开始前建议暂时取消Gradle的镜像。</strong></p>
-<blockquote>
-<p>为了不使用ali的gradle仓库，我把~/.gradle下的init.gradle（使用了ali的gradle库）重命名为init.gradle.bak了，这样gradle在运行的时候不再使用ali的库。</p>
-</blockquote>
-<p>依赖下载完成后，所需的依赖是在gradle的cache目录下，我们需要执行命令打包构建，将所需的依赖复制一份到jmeter源码目录的lib目录下。在Terminal中执行（gradle需要先配置环境变量）<code>gradlew runGui</code>。或在gradle任务下的developement下执行runGUI，以便在工程根目录下的lib下生成相关jar。</p>
-<p>执行完成后，会打开构建好的jmeter GUI界面。查看lib目录，jar包也已复制完成。在调试之前，先关闭打开的JMeter界面。</p>
-<h2 id="在IDEA中debug源码"><a href="#在IDEA中debug源码" class="headerlink" title="在IDEA中debug源码"></a>在IDEA中debug源码</h2><p>下面是debug设置的操作说明：</p>
-<ol>
-<li><p>在IDEA中，快捷键cmd+shift+f或double shift（mac电脑），搜索找到NewDriver类。</p>
-</li>
-<li><p>点击小锤子旁边的 Add Configuration…</p>
-</li>
-<li><p>增加Application设置，在VM options中加入 -Djmeter.home=xxx（JMeter源码目录），点击ok。</p>
-</li>
-</ol>
-<p>对于jmeter 5.4.1 ，为了debug jmeter，我是这样设置的:</p>
-<ol>
-<li>修改run configuration如下：</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">vm option：</span><br><span class="line">-Djmeter.home=/Users/lizhiqiang/Test/src/jmeter -cp .;/Users/lizhiqiang/Test/src/jmeter</span><br><span class="line"></span><br><span class="line">classname：</span><br><span class="line">org.apache.jmeter.NewDriver</span><br><span class="line"></span><br><span class="line">environment variables:</span><br><span class="line">JMETER_HOME=/Users/lizhiqiang/Test/src/jmeter</span><br></pre></td></tr></table></figure>
+    <title>使用JMeter5测试PostgreSQL数据库</title>
+    <url>/2021/08/29/%E4%BD%BF%E7%94%A8JMeter5%E6%B5%8B%E8%AF%95PostgreSQL%E6%95%B0%E6%8D%AE%E5%BA%93/</url>
+    <content><![CDATA[<p>在本节中，我们使用“JDBC请求”取样器组件来测试PostgreSQL数据库服务器。其他需使用的组件包括 线程组、 JDBC请求、摘要报告。对于MySQL或其他可以通过JDBC驱动连接的数据库，方法是类似的。</p>
+<h2 id="准备测试环境"><a href="#准备测试环境" class="headerlink" title="准备测试环境"></a>准备测试环境</h2><p>本示例中JMeter与PostgreSQL运行在同一台机器，使用Java 11，PostgreSQL版本是13.4。</p>
+<p>（1）准备数据库</p>
+<p>首先需要安装PostgreSQL数据库（后面简称PG），请参考官方安装说明[ pg下载地址：<a href="https://www.postgresql.org/download/">https://www.postgresql.org/download/</a> ]，选择相符的操作系统，下载和安装PG。完成安装后，我们在PostgreSQL中创建数据库，并在该库下创建数据表以及创建相关用户。</p>
+<p>本示例中创建数据库为“exampledb”，表名称为“user_tbl”。下表为相关sql命令。</p>
+<p>代码片段 0-1 在PostgreSQL数据库上创建用户和数据表：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line">#使用postgres用户在pg命令行上执行下述命令</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">USER</span> dbuser2 <span class="keyword">WITH</span> PASSWORD <span class="string">&#x27;password&#x27;</span>;</span><br><span class="line"><span class="keyword">CREATE</span> DATABASE test OWNER dbuser ENCODING utf8;</span><br><span class="line"><span class="keyword">GRANT</span> <span class="keyword">ALL</span> PRIVILEGES <span class="keyword">ON</span> DATABASE test <span class="keyword">to</span> dbuser;</span><br><span class="line">#然后使用新创建的用户dbuser登录pg后执行下述命令插入记录</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> user_tbl(name <span class="type">VARCHAR</span>(<span class="number">20</span>), signup_date <span class="type">DATE</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> user_tbl(name, signup_date) <span class="keyword">VALUES</span>(<span class="string">&#x27;john&#x27;</span>, <span class="string">&#x27;2020-10-01&#x27;</span>);</span><br></pre></td></tr></table></figure>
 
-<ol start="2">
-<li><p>生成lib下相关jar（<strong>如果之前已经执行过runGUI，不需要再执行</strong>）</p>
-</li>
-<li><p>修改代码</p>
-</li>
-</ol>
-<p>因为代码逻辑设定，所以为了启动debug，需要修改少量代码。如果不修改代码，debug的时候会报错。因此在line 87行添加一行：<code>tmpDir = null; //lizhiqiang debug</code>。（可能是我的野路子）。记得这行代码在正式发布的时候去除或注释掉！</p>
-<p>修改后这段代码是这样的：</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">tmpDir = <span class="keyword">null</span>; <span class="comment">//lizhiqiang debug</span></span><br><span class="line"><span class="keyword">if</span> (tmpDir == <span class="keyword">null</span>) &#123;</span><br><span class="line">    tmpDir = System.getenv(<span class="string">&quot;JMETER_HOME&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>这样，程序将使用环境变量JMETER_HOME定义的目录.</p>
-<ol start="4">
-<li>点击debug按钮，运行代码，随后会启动JMeter的GUI了，接下来我们就可以在想了解功能上，打断点或者修改源码，调试JMeter。</li>
-</ol>
-<h2 id="debug时相关错误"><a href="#debug时相关错误" class="headerlink" title="debug时相关错误"></a>debug时相关错误</h2><p>尝试使用过下面的命令，但可能都不是正确的方式，因为后面尝试了都不能将jmeter启动起来，最终还是按照之前提过的方法，不实用ali的仓库进行构建。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">检查校验和：构建完成后才检查校验和</span></span><br><span class="line">./gradlew clean build -Djava.awt.headless=true -PchecksumFailOn=build_finish</span><br><span class="line">-PchecksumFailOn=build_finish</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash">不检查校验和，也不测试</span></span><br><span class="line">./gradlew clean build -Djava.awt.headless=true -PchecksumIgnore -x test</span><br></pre></td></tr></table></figure>
-
-<p>下面是默认执行<code>gradle build</code>时出现的错误。这些校验和相关的错误要解决，否则可能后面还是不能运行成功。解决的方法在前面提过，就是不要使用ali的仓库（至少在我的实践看来是这样的。原因可能还是因为某些依赖的包不再ali的仓库里）：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">错误信息：</span><br><span class="line">Checksum/PGP violations detected on resolving configuration :src:testkit-wiremock:compileClasspath</span><br><span class="line">  No PGP signature (.asc file) found for artifact:</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p>下面的错误不记得是如何消除的了，但比较确定的一点是，没有checksum相关的错误后，下面的错误也没了：</p>
+<p>（2）安装数据库驱动</p>
+<p>JMeter需要通过数据库驱动程序连接PostgreSQL数据库服务器，因此要将相关驱动文件复制到 JMeter安装目录下的 ./lib目录，并重启JMeter。JMeter从lib和lib/ext目录加载jar，更多详细信息请参阅JMeter的类路径。我们使用postgresql-42.2.23.jar[ 下载地址：<a href="https://jdbc.postgresql.org/download.html">https://jdbc.postgresql.org/download.html</a> ]作为访问PostgreSQL数据库的驱动持续。</p>
+<h2 id="添加JDBC请求组件"><a href="#添加JDBC请求组件" class="headerlink" title="添加JDBC请求组件"></a>添加JDBC请求组件</h2><p>此处略过如何添加线程组以及设置用户数，参考之前的操作步骤即可。现在我们要在测试计划中添加执行JDBC Request的JMeter组件，即“JDBC请求”取样器。<br>首先需要配置JDBC连接属性。选择“线程组”，单击鼠标右键，然后选择 添加  →  配置元件 →  JDBC Connection Configuration 。配置该元件属性，如下图所示。</p>
+<p>图 3-5-2-1 jdbc connection设置<br><img src="/images/jmeter5/jdbc/jdbc%20connection.png" alt="jdbc connection"></p>
+<p>需要设置的字段包括：</p>
 <ul>
-<li>jmeter Caused by: java.io.FileNotFoundException:   subprojects/configuration-cache/src/main/kotlin (Is a directory)</li>
-<li>其他一些错误：</li>
+<li>连接池变量名称（Variable name for created pool）：JDBC取样器使用它来识别相关配置，可以是任何字符串。本示例设为postgresql。</li>
+<li>数据库地址（Database URL）：jdbc:postgresql://localhost/exampledb</li>
+<li>JDBC 驱动类（JDBC Driver class）：org.postgresql.Driver</li>
+<li>用户名（Username）：数据库的用户名。本示例中，此处为dbuser2。</li>
+<li>密码（Password）：用户名的密码。本示例中，用户dbuser2的密码是password。</li>
+<li>其他字段可以使用默认值。</li>
+<li>Validation query字段：</li>
 </ul>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Create separate module per source set</span><br><span class="line">Task :src:components:autostyleJavaCheck FAILED</span><br><span class="line">src:bshclient:autostyleJavaCheck FAILED</span><br><span class="line"> Task :src:testkit-wiremock:compileJava FAILED</span><br><span class="line">java/org/apache/jorphan/gui/DynamicStyle.java使用了未经检查或不安全的操作</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Validation Query：这个有好多资料里都没说到，validationQuery must be an SQL SELECT statement, that returns at least one row。不同的数据库，所选择的Validation Query是不同的，经过外国友人的测试，具体可参照以下（postgresql选select 1）：</span><br><span class="line">hsqldb - select 1 from INFORMATION_SCHEMA.SYSTEM_USERS</span><br><span class="line">Oracle - select 1 from dual</span><br><span class="line">DB2 - select 1 from sysibm.sysdummy1</span><br><span class="line">mysql - select 1</span><br><span class="line">microsoft SQL Server - select 1 (tested on SQL-Server 9.0, 10.5 [2008])</span><br><span class="line">postgresql - select 1</span><br><span class="line">ingres - select 1</span><br><span class="line">derby - values 1</span><br><span class="line">H2 - select 1</span><br><span class="line">Firebird - select 1 from rdb$database</span><br></pre></td></tr></table></figure>
 
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>构建文档：</p>
+<p>接着，添加JDBC请求取样器。再次选择 JDBC 用户元素，单击鼠标右键，在弹出菜单选择 添加  →  取样器  →  JDBC Request 。然后，左键选择这个新元素并修改相关配置。</p>
+<p>在我们的测试计划中，包括三个 JDBC Request取样器。第一个取样器向PostgreSQL数据库增加一行记录，第二个取样器查询记录，第三取样器清理第一个取样器插入的记录。JMeter 将按顺序将请求发送到服务器。具体配置如下。</p>
+<p>图 0-1 第一个JDBC请求取样器即执行增加记录操作的取样器:<br><img src="/images/jmeter5/jdbc/jdbc%20insert.png" alt="jdbc connection"></p>
+<p>上述为第一个请求配置面板，属性按如下设置编辑：</p>
 <ul>
-<li><a href="https://github.com/apache/jmeter/blob/master/gradle.md">https://github.com/apache/jmeter/blob/master/gradle.md</a> 官方构建说明，可以找到关于不同构建命令的说明</li>
+<li>将名称更改为“jdbc add”。</li>
+<li>连接池变量名称：“ postgresql”（与JDBC Connection Configuration即JDBC连接配置中的相同）</li>
+<li>设置查询类型（Query Type）为“Update Statement”</li>
+<li>SQL 查询字符串</li>
 </ul>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> user_tbl(name, signup_date) <span class="keyword">VALUES</span>(<span class="string">&#x27;mike&#x27;</span>, <span class="string">&#x27;2020-10-01&#x27;</span>);</span><br><span class="line"><span class="comment">--其中查询字符串中可以使用JMeter变量或?，如：</span></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> user_tbl(name, signup_date) <span class="keyword">VALUES</span>(<span class="string">&#x27;$&#123;name&#125;&#x27;</span>, <span class="string">&#x27;2020-10-01&#x27;</span>)</span><br><span class="line"><span class="comment">--其中name为用户定义的变量。</span></span><br><span class="line"><span class="comment">--或者：</span></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> user_tbl(name, signup_date) <span class="keyword">VALUES</span>(?, <span class="string">&#x27;2020-10-01&#x27;</span>)</span><br><span class="line"><span class="comment">--目前暂时不能使用占位符，比如VALUES(?)这样。</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>在parameter values传入相关参数，在parameter types设置参数类型，均以逗号分隔。</li>
+</ul>
+<p>第二个用于查询的JDBC Request取样器如下。<br><img src="/images/jmeter5/jdbc/jdbc%20query.png" alt="jdbc add"></p>
+<p>第三个JDBC Request取样器用于清理之前插入的数据，配置如下。<br><img src="/images/jmeter5/jdbc/jdbc%20delete.png" alt="jdbc add"></p>
+<h3 id="执行和查看结果"><a href="#执行和查看结果" class="headerlink" title="执行和查看结果"></a>执行和查看结果</h3><p>在执行测试时，JMeter 使用控制面板中指定的配置创建数据库连接池。该连接池在 “JDBC Request ”中的“Variable Name of Pool declared in JDBC Connection Configuration”字段中引用。可以使用多个不同的 JDBC 配置元素，但它们必须具有唯一的名称，否则定义在后面配置将覆盖前面定义的配置。每个 JDBC Request都必须引用一个 JDBC 配置池，多个 JDBC Request可以引用同一个池。</p>
+<p>在计划中，可以添加监听器来查看/存储测试结果。</p>
 ]]></content>
       <categories>
-        <category>jmeter</category>
+        <category>JMeter</category>
       </categories>
       <tags>
-        <tag>jmeter</tag>
-        <tag>debug</tag>
+        <tag>JMeter</tag>
+        <tag>JMeter5</tag>
+        <tag>JDBC</tag>
+        <tag>Database</tag>
+        <tag>Test</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Hello World</title>
+    <url>/2021/08/26/hello-world/</url>
+    <content><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
+<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p>
+<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
+
+<p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p>
+<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
+
+<p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p>
+<span id="more"></span>
+
+<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
+
+<p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
+]]></content>
+      <categories>
+        <category>helloworld</category>
+      </categories>
+      <tags>
+        <tag>helloworld</tag>
       </tags>
   </entry>
 </search>
