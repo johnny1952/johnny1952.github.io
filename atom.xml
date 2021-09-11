@@ -6,7 +6,7 @@
   <link href="https://johnny1952.github.io/atom.xml" rel="self"/>
   
   <link href="https://johnny1952.github.io/"/>
-  <updated>2021-09-08T16:06:04.436Z</updated>
+  <updated>2021-09-11T14:24:56.777Z</updated>
   <id>https://johnny1952.github.io/</id>
   
   <author>
@@ -15,6 +15,27 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Maven常用仓库及配置多仓库</title>
+    <link href="https://johnny1952.github.io/2021/09/09/%E6%8E%A5%E5%8F%A3Mock%E5%B9%B3%E5%8F%B0YAPI%E4%BD%BF%E7%94%A8%E5%92%8C%E4%BA%8C%E6%AC%A1%E5%BC%80%E5%8F%91/"/>
+    <id>https://johnny1952.github.io/2021/09/09/%E6%8E%A5%E5%8F%A3Mock%E5%B9%B3%E5%8F%B0YAPI%E4%BD%BF%E7%94%A8%E5%92%8C%E4%BA%8C%E6%AC%A1%E5%BC%80%E5%8F%91/</id>
+    <published>2021-09-09T03:55:15.000Z</published>
+    <updated>2021-09-11T14:24:56.777Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h2 id=&quot;常用repo列表&quot;&gt;&lt;a href=&quot;#常用repo列表&quot; class=&quot;headerlink&quot; title=&quot;常用repo列表&quot;&gt;&lt;/a&gt;常用repo列表&lt;/h2&gt;&lt;p&gt;首先介绍一个搜索jar包的常用网址：&lt;a</summary>
+        
+      
+    
+    
+    
+    
+  </entry>
   
   <entry>
     <title>调试JMeter5源码</title>
