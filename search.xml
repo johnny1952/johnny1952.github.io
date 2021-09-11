@@ -27,6 +27,15 @@
 
 <p>因为这些配置很难记住，所以记录了一下。希望有所帮助。</p>
 ]]></content>
+      <categories>
+        <category>maven</category>
+        <category>java</category>
+      </categories>
+      <tags>
+        <tag>maven</tag>
+        <tag>build</tag>
+        <tag>config</tag>
+      </tags>
   </entry>
   <entry>
     <title>调试JMeter5源码</title>

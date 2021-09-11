@@ -6,7 +6,7 @@
   <link href="https://johnny1952.github.io/atom.xml" rel="self"/>
   
   <link href="https://johnny1952.github.io/"/>
-  <updated>2021-09-11T14:24:56.777Z</updated>
+  <updated>2021-09-11T14:28:37.519Z</updated>
   <id>https://johnny1952.github.io/</id>
   
   <author>
@@ -20,8 +20,8 @@
     <title>Maven常用仓库及配置多仓库</title>
     <link href="https://johnny1952.github.io/2021/09/09/%E6%8E%A5%E5%8F%A3Mock%E5%B9%B3%E5%8F%B0YAPI%E4%BD%BF%E7%94%A8%E5%92%8C%E4%BA%8C%E6%AC%A1%E5%BC%80%E5%8F%91/"/>
     <id>https://johnny1952.github.io/2021/09/09/%E6%8E%A5%E5%8F%A3Mock%E5%B9%B3%E5%8F%B0YAPI%E4%BD%BF%E7%94%A8%E5%92%8C%E4%BA%8C%E6%AC%A1%E5%BC%80%E5%8F%91/</id>
-    <published>2021-09-09T03:55:15.000Z</published>
-    <updated>2021-09-11T14:24:56.777Z</updated>
+    <published>2021-09-09T03:55:00.000Z</published>
+    <updated>2021-09-11T14:28:37.519Z</updated>
     
     
       
@@ -34,6 +34,16 @@
     
     
     
+    <category term="maven" scheme="https://johnny1952.github.io/categories/maven/"/>
+    
+    <category term="java" scheme="https://johnny1952.github.io/categories/maven/java/"/>
+    
+    
+    <category term="maven" scheme="https://johnny1952.github.io/tags/maven/"/>
+    
+    <category term="build" scheme="https://johnny1952.github.io/tags/build/"/>
+    
+    <category term="config" scheme="https://johnny1952.github.io/tags/config/"/>
     
   </entry>
   
