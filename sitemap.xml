@@ -2,7 +2,14 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>https://johnny1952.github.io/2021/09/09/%E6%8E%A5%E5%8F%A3Mock%E5%B9%B3%E5%8F%B0YAPI%E4%BD%BF%E7%94%A8%E5%92%8C%E4%BA%8C%E6%AC%A1%E5%BC%80%E5%8F%91/</loc>
+    <loc>https://johnny1952.github.io/2021/09/16/%E6%90%AD%E5%BB%BAJMeter%E5%88%86%E5%B8%83%E5%BC%8F%E6%B5%8B%E8%AF%95%E7%8E%AF%E5%A2%83/</loc>
+    
+    <lastmod>2021-09-16</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://johnny1952.github.io/2021/09/09/Maven%E5%B8%B8%E7%94%A8%E4%BB%93%E5%BA%93%E5%8F%8A%E9%85%8D%E7%BD%AE%E5%A4%9A%E4%BB%93%E5%BA%93/</loc>
     
     <lastmod>2021-09-11</lastmod>
     
@@ -60,7 +67,7 @@
 
   <url>
     <loc>https://johnny1952.github.io/</loc>
-    <lastmod>2021-09-11</lastmod>
+    <lastmod>2021-09-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
@@ -68,98 +75,112 @@
   
   <url>
     <loc>https://johnny1952.github.io/tags/JMeter/</loc>
-    <lastmod>2021-09-11</lastmod>
+    <lastmod>2021-09-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>https://johnny1952.github.io/tags/JMeter5/</loc>
-    <lastmod>2021-09-11</lastmod>
+    <lastmod>2021-09-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>https://johnny1952.github.io/tags/JDBC/</loc>
-    <lastmod>2021-09-11</lastmod>
+    <lastmod>2021-09-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>https://johnny1952.github.io/tags/Database/</loc>
-    <lastmod>2021-09-11</lastmod>
+    <lastmod>2021-09-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>https://johnny1952.github.io/tags/Test/</loc>
-    <lastmod>2021-09-11</lastmod>
+    <lastmod>2021-09-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>https://johnny1952.github.io/tags/helloworld/</loc>
-    <lastmod>2021-09-11</lastmod>
+    <lastmod>2021-09-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>https://johnny1952.github.io/tags/pyecharts/</loc>
-    <lastmod>2021-09-11</lastmod>
+    <lastmod>2021-09-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>https://johnny1952.github.io/tags/python/</loc>
-    <lastmod>2021-09-11</lastmod>
+    <lastmod>2021-09-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>https://johnny1952.github.io/tags/%E5%8F%AF%E8%A7%86%E5%8C%96/</loc>
-    <lastmod>2021-09-11</lastmod>
+    <lastmod>2021-09-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>https://johnny1952.github.io/tags/jmeter/</loc>
-    <lastmod>2021-09-11</lastmod>
+    <lastmod>2021-09-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>https://johnny1952.github.io/tags/debug/</loc>
-    <lastmod>2021-09-11</lastmod>
+    <lastmod>2021-09-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>https://johnny1952.github.io/tags/maven/</loc>
-    <lastmod>2021-09-11</lastmod>
+    <lastmod>2021-09-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>https://johnny1952.github.io/tags/build/</loc>
-    <lastmod>2021-09-11</lastmod>
+    <lastmod>2021-09-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>https://johnny1952.github.io/tags/config/</loc>
-    <lastmod>2021-09-11</lastmod>
+    <lastmod>2021-09-16</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://johnny1952.github.io/tags/distributed/</loc>
+    <lastmod>2021-09-16</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://johnny1952.github.io/tags/%E5%88%86%E5%B8%83%E5%BC%8F/</loc>
+    <lastmod>2021-09-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
@@ -168,35 +189,42 @@
   
   <url>
     <loc>https://johnny1952.github.io/categories/helloworld/</loc>
-    <lastmod>2021-09-11</lastmod>
+    <lastmod>2021-09-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>https://johnny1952.github.io/categories/python/</loc>
-    <lastmod>2021-09-11</lastmod>
+    <lastmod>2021-09-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>https://johnny1952.github.io/categories/jmeter/</loc>
-    <lastmod>2021-09-11</lastmod>
+    <lastmod>2021-09-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>https://johnny1952.github.io/categories/maven/</loc>
-    <lastmod>2021-09-11</lastmod>
+    <lastmod>2021-09-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>https://johnny1952.github.io/categories/maven/java/</loc>
-    <lastmod>2021-09-11</lastmod>
+    <lastmod>2021-09-16</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://johnny1952.github.io/categories/jmeter/test/</loc>
+    <lastmod>2021-09-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>

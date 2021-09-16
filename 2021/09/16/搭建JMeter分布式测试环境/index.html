@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+
+
+<html lang="zh-CN">
+  
+
+    <head>
+      <meta charset="utf-8" />
+        
+      <meta name="description" content="欢迎与我交流自动化测试、测试开发、持续集成、DevOps方面知识经验，可在评论区留言。" />
+      
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1"
+      />
+      <title>搭建JMeter分布式测试环境 |  恰得福来的博客</title>
+  <meta name="generator" content="hexo-theme-ayer">
+      
+      <link rel="shortcut icon" href="/favicon.ico" />
+       
+<link rel="stylesheet" href="/dist/main.css">
+
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/Shen-Yu/cdn/css/remixicon.min.css"
+      />
+      
+<link rel="stylesheet" href="/css/custom.css">
+ 
+      <script src="https://cdn.jsdelivr.net/npm/pace-js@1.0.2/pace.min.js"></script>
+       
+ 
+
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bulma@5.0.1/bulma.min.css"
+      />
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.js"></script>
+
+      <!-- mermaid -->
+      
+      <style>
+        .swal2-styled.swal2-confirm {
+          font-size: 1.6rem;
+        }
+      </style>
+    <link rel="alternate" href="/atom.xml" title="恰得福来的博客" type="application/atom+xml">
+</head>
+  </html>
+</html>
+
+
+<body>
+  <div id="app">
+    
+      
+    <main class="content on">
+      <section class="outer">
+  <article
+  id="post-搭建JMeter分布式测试环境"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  搭建JMeter分布式测试环境
+</h1>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/2021/09/16/%E6%90%AD%E5%BB%BAJMeter%E5%88%86%E5%B8%83%E5%BC%8F%E6%B5%8B%E8%AF%95%E7%8E%AF%E5%A2%83/" class="article-date">
+  <time datetime="2021-09-16T14:53:00.000Z" itemprop="datePublished">2021-09-16</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/jmeter/">jmeter</a> / <a class="article-category-link" href="/categories/jmeter/test/">test</a>
+  </div>
+  
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> 字数统计:</span>
+            <span class="post-count">2.8k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> 阅读时长≈</span>
+            <span class="post-count">10 分钟</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
+    <div class="article-entry" itemprop="articleBody">
+       
+  <h2 id="分布式测试概述"><a href="#分布式测试概述" class="headerlink" title="分布式测试概述"></a>分布式测试概述</h2><p>现在我们来了解如何使用多台机器来执行压力测试，也就是所谓的分布式测试。当我们模拟大量的并发虚拟用户时，比如我们要起10万、100万甚至更多的并发用户时，一台负载机器可能就满足不了我们需要的用户量。此时，就需要使用多台主机搭建一套多节点的分布式性能测试环境，使得我们可以执行大规模并发测试。这是执行分布式性能测试的基本原因。当然可能还有其他一些场景，比如我们可以建立一套测试云平台，也需要搭建分布式测试环境，来满足多租户需求。</p>
+<p>在搭建JMeter分布式测试环境和利用该环境执行性能或压力测试时，首次需要执行的操作包括：</p>
+<ol>
+<li>准备测试环境，主要是准备用于运行JMeter进程的机器，可以是Windows机器，也可以是Unix类机器包括Linux操作系统的机器。包括安装部署JMeter及依赖的Java环境。第一次准备之后，后面的测试就可以复用这些环境了</li>
+<li>设置分布式环境没台机器上的JMeter节点的配置</li>
+<li>准备要运行的测试脚本。可在JMeter的GUI界面上，先编好测试计划，然后下载到分布式环境中的主控制节点上。此处要主次使用的JMeter的版本要匹配，否则可能产生莫名错误</li>
+<li>启动分布式测试</li>
+<li>查看和分析测试结果</li>
+<li>可能需要进行一些问题处理或服务器调优。如果压力不够，可能还需要增加机器，此时可以参考步骤1中的操作了</li>
+</ol>
+<h2 id="准备测试环境"><a href="#准备测试环境" class="headerlink" title="准备测试环境"></a>准备测试环境</h2><p>和其他分布式系统类似，使用JMeter搭建分布式测试系统，结构也基本是一主多从的架构，包括一台主控制节点，多个工作节点。</p>
+<p><img src="./imgs/distributed-names.svg" alt="dirstributed-nodes"></p>
+<p>在开始执行分布式测试之前，首先要准备负载机器。作为实践案例，我们使用三台Linux机器构建一个分布式测试环境，构建一主二从的结构。在执行测试时，由JMeter 主控制器节点（主节点）在多个工作节点（从节点）上启动测试。使用<code>ifconfig</code>命令查看机器的ip地址，记录IP地址备用。本例使用的三台机器ip地址分别为<br>192.168.1.180、192.168.1.181、192.168.1.182，其中将192.168.1.180作为主节点。</p>
+<p>首先对三台服务器执行下述检查：</p>
+<ul>
+<li>系统上的防火墙已关闭或打开了正确的端口。在实验环境下，可以关闭防火墙；在正式的测试环境下，建议不要关闭防火墙，打开相关的端口即可</li>
+<li>所有负载机器都在同一个子网上，确保可以互通</li>
+<li>确保三台负载机可以访问被测服务器</li>
+<li>确保在所有系统上使用相同版本的 JMeter 和 Java。混合版本将无法正常工作</li>
+<li>已经为 RMI 设置了 SSL或禁用SSL。参考<a href="../5%20remote_testing/5.1%20JMeter%E8%BF%9C%E7%A8%8B%E6%B5%8B%E8%AF%95.md">远程测试</a>。</li>
+</ul>
+<h2 id="设置分布式环境"><a href="#设置分布式环境" class="headerlink" title="设置分布式环境"></a>设置分布式环境</h2><h3 id="设置主控节点"><a href="#设置主控节点" class="headerlink" title="设置主控节点"></a>设置主控节点</h3><p>完成上述测试环境准备和检查工作后，需要在主节点上进行如下设置。主控节点有时成为client节点，因为相对工作节点来说，它就是一个client，而工作节点是server节点。</p>
+<p>在作为控制台的控制器节点（192.168.1.180）上，在jmeter/bin目录打开jmeter.properties进行编辑。<br>首先找到remote_hosts，设置为<code>remote_hosts=192.168.1.181,192.168.1.182</code>，其次，设置client.rmi.localport的值，表示控制节点将使用这个指定的端口与工作节点通信。其他设置使用默认值。</p>
+<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">remote_hosts</span>=<span class="string">192.168.1.181,192.168.1.182</span></span><br><span class="line"><span class="meta">client.rmi.localport</span>=<span class="string">5000</span></span><br><span class="line"><span class="meta">server.rmi.ssl.disable</span>=<span class="string">true #设为true表示rmi不使用ssl进行通信</span></span><br></pre></td></tr></table></figure>
+
+<p>JMeter分布式环境中，主控节点和工作节点之间通过RMI通信。在上面配置中，我们使用5000作为主控节点的RMI端口，如果打开了防火墙，那么要允许主控节点上的5000端口与外部机器通信。</p>
+<p>另外，从 JMeter 4.0 开始，RMI 的默认传输机制将使用 SSL。本例为了简便期间，关闭使用SSL的机制。如果希望继续使用SSL，需要密钥和证书才能工作，参考<a href="../5%20remote_testing/5.1%20JMeter%E8%BF%9C%E7%A8%8B%E6%B5%8B%E8%AF%95.md">JMeter远程测试</a>中关于SSL的设置。</p>
+<h3 id="设置工作节点"><a href="#设置工作节点" class="headerlink" title="设置工作节点"></a>设置工作节点</h3><p>正如上面说的，工作节点在JMeter分布式测试环境中，也称为server节点（服务节点）。不过注意这个服务节点与被测服务不同，要区分开。</p>
+<p>在jmeter/bin目录打开jmeter.properties进行编辑。在工作节点上设置server.rmi.localport的值，表示工作节点将使用这个指定的端口与控制节点通信：</p>
+<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">server.rmi.localport</span>=<span class="string">4000</span></span><br><span class="line"><span class="meta">server.rmi.ssl.disable</span>=<span class="string">true #设为true表示rmi不使用ssl进行通信</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="执行分布式测试"><a href="#执行分布式测试" class="headerlink" title="执行分布式测试"></a>执行分布式测试</h2><p>一旦确定系统准备就绪，就可以设置远程测试了。</p>
+<h3 id="启动工作节点"><a href="#启动工作节点" class="headerlink" title="启动工作节点"></a>启动工作节点</h3><p>在工作节点上（192.168.1.181和192.168.1.182），转到jmeter/bin目录并执行 jmeter-server（在 windows 上为jmeter-server.bat）。</p>
+<p>运行成功的输出如下，表明控制节点可以开始调用该工作节点执行分布式测试了：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[root@192.168.1.181 bin]<span class="comment"># ./jmeter-server</span></span><br><span class="line">Using <span class="built_in">local</span> port: 4000</span><br><span class="line">Created remote object: UnicastServerRef2 [liveRef: [endpoint:[192.168.1.181:4000](<span class="built_in">local</span>),objID:[7eec802e:17beeece6e9:-7fff, -4396200611540390478]]]</span><br></pre></td></tr></table></figure>
+
+<p>如果没有看到此消息，则表示jmeter-server未正确启动。相关问题的解决可转到本文后面的<a href="#%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3">问题及解决</a>一章。</p>
+<h3 id="启动分布式测试"><a href="#启动分布式测试" class="headerlink" title="启动分布式测试"></a>启动分布式测试</h3><p>分布式性能测试中，一定要以非GUI的方式启动测试。因此，接下来只介绍以非GUI方式运行jmeter执行分布式测试。</p>
+<p>假设我们需要执行的测试计划脚本是test_on_linux.jmx，并希望把测试日志存储到test.jtl中，那么只需要把test_on_linux.jmx部署到主控节点，无需部署到工作节点。在执行测试时，主控节点会自动分发测试任务给工作节点。</p>
+<p>下面开始正式启动测试。在控制节点（即192.168.1.180这台机器）上的jmeter/bin目录下执行命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./jmeter -n -t test_on_linux.jmx -l test_queryweb.jtl -R192.168.1.181,192.168.1.182</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>参数说明：</p>
+<p>-n表示以nogui方式运行测试计划</p>
+<p>-t表示测试计划，后面跟测试计划名称</p>
+<p>-l表示测试结果，后面跟测试结果文件名称</p>
+<p>-R表示JMeter代理（工作节点），后面跟代理所在ip地址。注意，上面的命令只在ip1和ip2上运行测试，而当前机器作为主控台负责收集数据。</p>
+</blockquote>
+<p>如果没有错误，则打印类似如下信息：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">[root@hadoop0 bin]<span class="comment"># ./jmeter -n -t test_on_linux.jmx -l test_queryweb.jtl -R192.168.1.181,192.168.1.182</span></span><br><span class="line">Creating summariser &lt;summary&gt;</span><br><span class="line">Created the tree successfully using test_on_linux.jmx</span><br><span class="line">Configuring remote engine: 192.168.1.181</span><br><span class="line">Configuring remote engine: 192.168.1.182</span><br><span class="line">Starting distributed <span class="built_in">test</span> with remote engines: [192.168.1.181, 192.168.1.182] @ Thu Sep 16 22:31:18 CST 2021 (1631802678465)</span><br><span class="line">Remote engines have been started:[192.168.1.181, 192.168.1.182]</span><br><span class="line">Waiting <span class="keyword">for</span> possible Shutdown/StopTestNow/HeapDump/ThreadDump message on port 4445</span><br><span class="line">summary =    100 <span class="keyword">in</span> 00:00:01 =   71.2/s Avg:    41 Min:    13 Max:   146 Err:     0 (0.00%)</span><br><span class="line">Tidying up remote @ Thu Sep 16 22:31:22 CST 2021 (1631802682161)</span><br><span class="line">... end of run</span><br></pre></td></tr></table></figure>
+
+<p>此时查看两个工作节点，可以看到都会打印类似下述信息，说明正在执行主控节点启动的分布式测试任务：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Starting the test on host 192.168.1.181 @ Thu Sep 16 22:31:20 CST 2021 (1631802680315)</span><br><span class="line">Finished the test on host 192.168.1.181 @ Thu Sep 16 22:31:22 CST 2021 (1631802682437)</span><br></pre></td></tr></table></figure>
+
+<p>如希望以后台形式运行测试，则执行如下命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nohup ./jmeter -n -t test_on_linux.jmx -l test_queryweb.jtl &amp; &gt; nohup.log</span><br></pre></td></tr></table></figure>
+
+<h2 id="查看测试结果"><a href="#查看测试结果" class="headerlink" title="查看测试结果"></a>查看测试结果</h2><p>上述执行命令的输出信息中的<code>end of run</code>表示测试计划已经运行完毕。可在运行JMeter打开测试结果文件test_queryweb.jtl。</p>
+<p>下面是在JMeter的GUI（图形化界面)上查看执行结果的步骤：</p>
+<ol>
+<li>step1：为测试计划添加查看结果树</li>
+</ol>
+<p>在打开的JMeter图形窗口，并新建或打开一个测试计划，为该计划添加“结果查看树”和“聚合报告”。</p>
+<ol start="2">
+<li>step2：打开jtl文件，以可视化方式查看测试结果</li>
+</ol>
+<p>打开查看结果树，点击“浏览”按钮打开测试结果文件test_queryweb.jtl。同理，打开聚合报告，点击“浏览”按钮打开测试结果文件test_queryweb.jtl生成聚合报告。</p>
+<h2 id="问题及解决"><a href="#问题及解决" class="headerlink" title="问题及解决"></a>问题及解决</h2><h3 id="如果测试脚本使用了csv等文件，必须放到工作节点上，否则会报错误"><a href="#如果测试脚本使用了csv等文件，必须放到工作节点上，否则会报错误" class="headerlink" title="如果测试脚本使用了csv等文件，必须放到工作节点上，否则会报错误"></a>如果测试脚本使用了csv等文件，必须放到工作节点上，否则会报错误</h3><p>错误信息示例：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">2016/07/29 15:44:01 INFO  - jmeter.threads.JMeterThread: Thread started: 线程组 1-1</span><br><span class="line">2016/07/29 15:44:01 INFO  - jmeter.services.FileServer: Stored: csvRelation-vip.csv</span><br><span class="line">2016/07/29 15:44:01 ERROR - jmeter.config.CSVDataSet: java.io.FileNotFoundException: ./csvRelation-vip.csv (没有那个文件或目录)</span><br><span class="line">2016/07/29 15:44:01 INFO  - jmeter.threads.JMeterThread: Stop Thread seen: org.apache.jorphan.util.JMeterStopThreadException: End of file detected</span><br></pre></td></tr></table></figure>
+
+<h3 id="运行时错误-Error-in-NonGUIDriver-java-lang-NullPointerException"><a href="#运行时错误-Error-in-NonGUIDriver-java-lang-NullPointerException" class="headerlink" title="运行时错误: Error in NonGUIDriver java.lang.NullPointerException"></a>运行时错误: Error in NonGUIDriver java.lang.NullPointerException</h3><p>产生该错误的原因，目前就我所知，有两种情况：</p>
+<p>情况1，低版本的JMeter运行高版本的测试计划（测试计划是在高版本的JMeter上编制的）。解决方法：使用相同或更高版本JMeter运行该计划。</p>
+<p>情况2，使用第三方插件生成的测试计划，运行在没有该第三方插件的JMeter上。解决方法：在JMeter上安装插件或重新生成不包含插件的测试计划。</p>
+<h3 id="运行时错误-controller连接远程agent失败：Connection-refused-to-host"><a href="#运行时错误-controller连接远程agent失败：Connection-refused-to-host" class="headerlink" title="运行时错误: controller连接远程agent失败：Connection refused to host"></a>运行时错误: controller连接远程agent失败：Connection refused to host</h3><p>详细日志：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Failure connecting to remote host: 10.15.144.172 java.rmi.ConnectException: Connection refused to host: 10.15.144.172; nested exception is:</span><br><span class="line">    java.net.ConnectException: 拒绝连接</span><br><span class="line">Failed to configure 10.15.144.172</span><br><span class="line">Configuring remote engine for 10.15.144.173</span><br><span class="line">Using remote object: UnicastRef [liveRef: [endpoint:[10.15.144.173:42973](remote),objID:[-7fc64e11:1564b9635f8:-7fff, -3234805376461024374]]]</span><br><span class="line">Error in NonGUIDriver java.lang.IllegalArgumentException: The following remote engines could not be configured:[10.15.107.159, 10.15.107.241, 10.15.107.110, 10.15.107.116, 10.15.107.117, 10.15.144.85, 10.15.144.171, 10.15.144.172]</span><br></pre></td></tr></table></figure>
+
+<p>分析原因。</p>
+<ol>
+<li>首先查看是否有开防火墙，如果开了请关闭。或打开相关端口。</li>
+<li>然后查看jmeter-server进程是否启起来了。这次比较大意，只是把jmeter文件拷到目标机器上了，但是没有安装java环境，所以才导致jmeter启动失败。</li>
+</ol>
+<h3 id="防火墙问题"><a href="#防火墙问题" class="headerlink" title="防火墙问题"></a>防火墙问题</h3><p>在某些情况下，防火墙可能仍会阻止 RMI 流量。<br>在负载测试期间应停止防病毒软件，因为它会严重影响导致错误结果的时间。<br>对于Windows负载机，防火墙需要从 windows 服务中停止，或者至少需要打开一些端口。<br>在 Linux 上，iptables 可能默认是打开的。可停止 Linux 防火墙或确保已打开正确的端口。</p>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>版权声明： </strong>
+          
+          本博客所有文章除特别声明外，著作权归作者所有。转载请注明出处！
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://johnny1952.github.io/2021/09/16/%E6%90%AD%E5%BB%BAJMeter%E5%88%86%E5%B8%83%E5%BC%8F%E6%B5%8B%E8%AF%95%E7%8E%AF%E5%A2%83/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/distributed/" rel="tag">distributed</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/jmeter/" rel="tag">jmeter</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/" rel="tag">分布式</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+  <nav class="article-nav">
+    
+    
+      <a href="/2021/09/09/Maven%E5%B8%B8%E7%94%A8%E4%BB%93%E5%BA%93%E5%8F%8A%E9%85%8D%E7%BD%AE%E5%A4%9A%E4%BB%93%E5%BA%93/" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">Maven常用仓库及配置多仓库</div>
+      </a>
+    
+  </nav>
+
+   
+<!-- valine评论 -->
+<div id="vcomments-box">
+  <div id="vcomments"></div>
+</div>
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js"></script>
+<script>
+  new Valine({
+    el: "#vcomments",
+    app_id: "BDYyK8ADltP2ULGCnAJe5ufP-gzGzoHsz",
+    app_key: "yCqG1hemYrFKJahvOBl6uppH",
+    path: window.location.pathname,
+    avatar: "monsterid",
+    placeholder: "你有什么想法或问题？快来评论一下吧!",
+    recordIP: true,
+  });
+  const infoEle = document.querySelector("#vcomments .info");
+  if (infoEle && infoEle.childNodes && infoEle.childNodes.length > 0) {
+    infoEle.childNodes.forEach(function (item) {
+      item.parentNode.removeChild(item);
+    });
+  }
+</script>
+<style>
+  #vcomments-box {
+    padding: 5px 30px;
+  }
+
+  @media screen and (max-width: 800px) {
+    #vcomments-box {
+      padding: 5px 0px;
+    }
+  }
+
+  #vcomments-box #vcomments {
+    background-color: #fff;
+  }
+
+  .v .vlist .vcard .vh {
+    padding-right: 20px;
+  }
+
+  .v .vlist .vcard {
+    padding-left: 10px;
+  }
+</style>
+
+ 
+   
+     
+</article>
+
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2021
+        <i class="ri-heart-fill heart_icon"></i> Johnny Li
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        <span>
+  <span><i class="ri-user-3-fill"></i>访问人数:<span id="busuanzi_value_site_uv"></span></span>
+  <span class="division">|</span>
+  <span><i class="ri-eye-fill"></i>浏览次数:<span id="busuanzi_value_page_pv"></span></span>
+</span>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1280251923&amp;web_id=1280251923'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>    
+    </main>
+    <div class="float_btns">
+      <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+    </div>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="恰得福来的博客"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/friends">友链</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="https://johnny1952.github.io/gitbook-tutorial">gitbook</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="搜索">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="https://cdn.jsdelivr.net/gh/Shen-Yu/cdn/img/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="https://cdn.jsdelivr.net/gh/Shen-Yu/cdn/img/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-3.6.0.min.js"></script>
+ 
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+ 
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: ".tocbot",
+    contentSelector: ".article-entry",
+    headingSelector: "h1, h2, h3, h4, h5, h6",
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: "main",
+    positionFixedSelector: ".tocbot",
+    positionFixedClass: "is-position-fixed",
+    fixedSidebarOffset: "auto",
+  });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.js"></script>
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.css"
+/>
+<script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+ <!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css">
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script> 
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+ 
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+ 
+<!-- ClickLove -->
+
+<!-- ClickBoom1 -->
+
+<!-- ClickBoom2 -->
+
+<!-- CodeCopy -->
+ 
+<link rel="stylesheet" href="/css/clipboard.css">
+ <script src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+ 
+<!-- CanvasBackground -->
+
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ theme: "forest" });
+  }
+</script>
+
+
+    
+    
+
+  </div>
+</body>
+
+</html>
