@@ -1,6 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>使用JMeter测试服务器基准性能</title>
+    <url>/2021/09/18/%E4%BD%BF%E7%94%A8JMeter%E6%B5%8B%E8%AF%95%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%9F%BA%E5%87%86%E6%80%A7%E8%83%BD/</url>
+    <content><![CDATA[<h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>打算使用JMeter测试一台运行一个简单web server的服务器的基准性能，并尝试对服务器内核进行调优。</p>
+<p>为了客观一点，计划使用java、go、nodejs、python等4种语言编写的简单web服务作测试。所谓简单web服务，就是那种不涉及数据库操纵、只是进行简单处理并返回响应体的服务。除了对Linux服务器进行优化，还涉及对服务进行优化，最终测试一台8C16GB的标准Linux虚拟机的基准性能到底如何。</p>
+<h2 id="准备被测环境"><a href="#准备被测环境" class="headerlink" title="准备被测环境"></a>准备被测环境</h2><p>准备两台负载机器用于产生压力，另外准备一台服务器作为被测机器。三台机器都位于同一台物理机器上，每台机器配置都是8C16GB的设置。</p>
+<p>我们是使用JMeter执行分布式测试，所以自然在两台测试机器上安装好JMeter，并配置好分布式执行环境。其中一台机器即作为主控节点也作为工作节点。具体怎么配置分布式环境见另外一篇文章<a href="https://blog.csdn.net/ceo158/article/details/120357653">搭建JMeter分布式测试环境</a>。在被测服务器上安装必备的基础软件，包括jdk、nodejs、python、go等，具体安装方法网上自查，难以面面俱到了。</p>
+<h2 id="准备被测服务"><a href="#准备被测服务" class="headerlink" title="准备被测服务"></a>准备被测服务</h2><h3 id="使用nodejs版服务"><a href="#使用nodejs版服务" class="headerlink" title="使用nodejs版服务"></a>使用nodejs版服务</h3><p>首先尝试使用一个开源的nodejs服务<a href="https://github.com/typicode/json-server">json-server</a>做测试。为了安装该服务，需要先安装node和npm。</p>
+<p>完成node和npm安装后，安装json-server：<code>npm install -g json-server</code>。随后创建一个db.json文件，编辑其内容如下：</p>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">&quot;posts&quot;</span>: [</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">&quot;id&quot;</span>: <span class="number">1</span>,</span><br><span class="line">      <span class="attr">&quot;title&quot;</span>: <span class="string">&quot;hello&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">  ],</span><br><span class="line">  <span class="attr">&quot;profile&quot;</span>: &#123;</span><br><span class="line">    <span class="attr">&quot;name&quot;</span>: <span class="string">&quot;typicode&quot;</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后执行<code>json-server --watch db.json --host 0.0.0.0 --port 3000</code>启动json-server服务，作为我们的被测服务。</p>
+<h3 id="使用ab对json-server服务执行测试"><a href="#使用ab对json-server服务执行测试" class="headerlink" title="使用ab对json-server服务执行测试"></a>使用ab对json-server服务执行测试</h3><p>使用apache benchmark（简称ab）执行最基础的测试，用来作为与JMeter分布式测试的效果的对比。有对比才有高下之分对吧。</p>
+<p>在CentOS上安装ab，只需要一行命令：<code>yum install /usr/bin/ab</code>。安装好以后在命令行执行<code>ab</code>验证是否成功。</p>
+<p>要测试的url是<code>http://192.168.1.182:3000/posts/1</code>。</p>
+<p>初步设置ab测试的并发数为3000，请求总数为30万，即每个用户发送100个请求。</p>
+<p>第一轮测试结果如下：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">[root@hadoop0 ~]<span class="comment"># ab -c 3000 -n 300000 http://192.168.1.182:3000/posts/1</span></span><br><span class="line">This is ApacheBench, Version 2.3 &lt;<span class="variable">$Revision</span>: 1430300 $&gt;</span><br><span class="line">Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/</span><br><span class="line">Licensed to The Apache Software Foundation, http://www.apache.org/</span><br><span class="line"></span><br><span class="line">Benchmarking hadoop2 (be patient)</span><br><span class="line">socket: Too many open files (24)</span><br></pre></td></tr></table></figure>
+<p>上面输出的<code>Too many open files</code>错误说明负载机器没有优化，所以ab不能启动很多并发。根据得上面信息，修改允许打开的文件句柄数。通过修改/etc/security/limits.conf中关于用户打开文件数的软限制或硬限制，或执行命令<code>ulimit -n 1000000</code>，将其暂修改为1000000，可以满足我们的测试需要了。通过修改文件达到的效果是永久性的；执行命令修改的效果是临时性的，机器重启后会恢复为初始值。</p>
+<p>第二轮测试结果：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">[root@hadoop0 ~]<span class="comment"># ab -c 3000 -n 300000 http://192.168.1.182:3000/posts/1</span></span><br><span class="line">This is ApacheBench, Version 2.3 &lt;<span class="variable">$Revision</span>: 1430300 $&gt;</span><br><span class="line">Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/</span><br><span class="line">Licensed to The Apache Software Foundation, http://www.apache.org/</span><br><span class="line"></span><br><span class="line">Benchmarking hadoop2 (be patient)</span><br><span class="line">Completed 30000 requests</span><br><span class="line">Completed 60000 requests</span><br><span class="line">apr_socket_recv: Connection timed out (110)</span><br><span class="line">Total of 75158 requests completed</span><br></pre></td></tr></table></figure>
+<p>通过分析上述输出，之前的错误消失了，但还是发现有新的错误出现，一波三折啊。这次的错误是<code>apr_socket_recv: Connection timed out</code>，看起来是连接出现了超时。所以到底是服务端的问题还是客户端的问题？首先检查被测服务器上的json-sever进程，没有出现问题，可以正常响应。通过搜索发现，该错误可能是由于个别连接出错而导致ab进程中止，但其实性能测试中出现个别错误是比较正常的，只要在可接受的范围内。所以，完全可以继续执行测试。通过给ab命令加<code>-r</code>选型消除这个错误，修复后的测试命令是<code>ab -r -c 3000 -n 300000 http://hadoop2:3000/posts/1</code>。</p>
+<p>第三轮测试结果（添加-r选项后再执行的结果）：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">Requests per second:    858.24 [<span class="comment">#/sec] (mean)</span></span><br><span class="line">Time per request:       3495.540 [ms] (mean)</span><br></pre></td></tr></table></figure>
+
+<p>输出比较多，就不全部贴出，只贴关键的两条信息。一条是每秒处理请求数，所谓RPS，另外一个是每个请求的响应时间，达到了3.5秒。看起来性能比较低。而且通过观察服务器的资源使用情况，负载机器的资源使用率都没有超过10%（6C16GB配置）。所以看起来，应用服务器可能有大问题。</p>
+<p>所以，决定对json-server及所在服务器进行调优。</p>
+<h3 id="使用JMeter执行单节点模式测试"><a href="#使用JMeter执行单节点模式测试" class="headerlink" title="使用JMeter执行单节点模式测试"></a>使用JMeter执行单节点模式测试</h3><p>先使用单节点模式测试。再单节点压力不够时，再使用分布式测试模式。</p>
+<p>首先在JMeter脚本中设置并发用户数和循环次数。</p>
+]]></content>
+      <categories>
+        <category>jmeter</category>
+      </categories>
+      <tags>
+        <tag>jmeter</tag>
+        <tag>性能测试</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>搭建JMeter分布式测试环境</title>
     <url>/2021/09/16/%E6%90%AD%E5%BB%BAJMeter%E5%88%86%E5%B8%83%E5%BC%8F%E6%B5%8B%E8%AF%95%E7%8E%AF%E5%A2%83/</url>
     <content><![CDATA[<h2 id="分布式测试概述"><a href="#分布式测试概述" class="headerlink" title="分布式测试概述"></a>分布式测试概述</h2><p>现在我们来了解如何使用多台机器来执行压力测试，也就是所谓的分布式测试。当我们模拟大量的并发虚拟用户时，比如我们要起10万、100万甚至更多的并发用户时，一台负载机器可能就满足不了我们需要的用户量。此时，就需要使用多台主机搭建一套多节点的分布式性能测试环境，使得我们可以执行大规模并发测试。这是执行分布式性能测试的基本原因。当然可能还有其他一些场景，比如我们可以建立一套测试云平台，也需要搭建分布式测试环境，来满足多租户需求。</p>
@@ -25,10 +62,14 @@
 <li>已经为 RMI 设置了 SSL或禁用SSL。参考<a href="../5%20remote_testing/5.1%20JMeter%E8%BF%9C%E7%A8%8B%E6%B5%8B%E8%AF%95.md">远程测试</a>。</li>
 </ul>
 <h2 id="设置分布式环境"><a href="#设置分布式环境" class="headerlink" title="设置分布式环境"></a>设置分布式环境</h2><h3 id="设置主控节点"><a href="#设置主控节点" class="headerlink" title="设置主控节点"></a>设置主控节点</h3><p>完成上述测试环境准备和检查工作后，需要在主节点上进行如下设置。主控节点有时成为client节点，因为相对工作节点来说，它就是一个client，而工作节点是server节点。</p>
-<p>在作为控制台的控制器节点（192.168.1.180）上，在jmeter/bin目录打开jmeter.properties进行编辑。<br>首先找到remote_hosts，设置为<code>remote_hosts=192.168.1.181,192.168.1.182</code>，其次，设置client.rmi.localport的值，表示控制节点将使用这个指定的端口与工作节点通信。其他设置使用默认值。</p>
+<p>在作为控制台的控制器节点（192.168.1.180）上，在jmeter/bin目录打开jmeter.properties进行编辑。</p>
+<p>首先找到remote_hosts，设置为<code>remote_hosts=192.168.1.181,192.168.1.182</code>，其次，设置client.rmi.localport的值，表示控制节点将使用这个指定的端口与工作节点通信。其他设置使用默认值。</p>
 <figure class="highlight properties"><table><tr><td class="code"><pre><span class="line"><span class="attr">remote_hosts</span>=<span class="string">192.168.1.181,192.168.1.182</span></span><br><span class="line"><span class="meta">client.rmi.localport</span>=<span class="string">5000</span></span><br><span class="line"><span class="meta">server.rmi.ssl.disable</span>=<span class="string">true #设为true表示rmi不使用ssl进行通信</span></span><br></pre></td></tr></table></figure>
 
-<p>JMeter分布式环境中，主控节点和工作节点之间通过RMI通信。在上面配置中，我们使用5000作为主控节点的RMI端口，如果打开了防火墙，那么要允许主控节点上的5000端口与外部机器通信。</p>
+<p>JMeter分布式环境中，主控节点和工作节点之间通过RMI进行服务调用。在上面配置中，主控节点使用5000与工作节点通信，如果打开了防火墙，那么要打开5000端口。</p>
+<blockquote>
+<p>特别说明一下server.rmi.localport、server_ports、client.rmi.localport这几个相似配置的关系和区别：<br>server_ports指Java RMI注册表的端口，只需在工作节点配置。server.rmi.localport为工作节点使用的RMI本地端口，client.rmi.localport为主控节点使用的RMI本地端口，如果不设置，则JMeter使用动态端口互相通信。在开启防火墙的情况，需要指定端口，避免随机动态端口不能访问。</p>
+</blockquote>
 <p>另外，从 JMeter 4.0 开始，RMI 的默认传输机制将使用 SSL。本例为了简便期间，关闭使用SSL的机制。如果希望继续使用SSL，需要密钥和证书才能工作，参考<a href="../5%20remote_testing/5.1%20JMeter%E8%BF%9C%E7%A8%8B%E6%B5%8B%E8%AF%95.md">JMeter远程测试</a>中关于SSL的设置。</p>
 <h3 id="设置工作节点"><a href="#设置工作节点" class="headerlink" title="设置工作节点"></a>设置工作节点</h3><p>正如上面说的，工作节点在JMeter分布式测试环境中，也称为server节点（服务节点）。不过注意这个服务节点与被测服务不同，要区分开。</p>
 <p>在jmeter/bin目录打开jmeter.properties进行编辑。在工作节点上设置server.rmi.localport的值，表示工作节点将使用这个指定的端口与控制节点通信：</p>

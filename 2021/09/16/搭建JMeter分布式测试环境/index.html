@@ -88,7 +88,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> 字数统计:</span>
-            <span class="post-count">2.8k</span>
+            <span class="post-count">2.9k</span>
         </span>
     </span>
 
@@ -97,7 +97,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> 阅读时长≈</span>
-            <span class="post-count">10 分钟</span>
+            <span class="post-count">11 分钟</span>
         </span>
     </span>
 </div>
@@ -134,10 +134,14 @@
 <li>已经为 RMI 设置了 SSL或禁用SSL。参考<a href="../5%20remote_testing/5.1%20JMeter%E8%BF%9C%E7%A8%8B%E6%B5%8B%E8%AF%95.md">远程测试</a>。</li>
 </ul>
 <h2 id="设置分布式环境"><a href="#设置分布式环境" class="headerlink" title="设置分布式环境"></a>设置分布式环境</h2><h3 id="设置主控节点"><a href="#设置主控节点" class="headerlink" title="设置主控节点"></a>设置主控节点</h3><p>完成上述测试环境准备和检查工作后，需要在主节点上进行如下设置。主控节点有时成为client节点，因为相对工作节点来说，它就是一个client，而工作节点是server节点。</p>
-<p>在作为控制台的控制器节点（192.168.1.180）上，在jmeter/bin目录打开jmeter.properties进行编辑。<br>首先找到remote_hosts，设置为<code>remote_hosts=192.168.1.181,192.168.1.182</code>，其次，设置client.rmi.localport的值，表示控制节点将使用这个指定的端口与工作节点通信。其他设置使用默认值。</p>
+<p>在作为控制台的控制器节点（192.168.1.180）上，在jmeter/bin目录打开jmeter.properties进行编辑。</p>
+<p>首先找到remote_hosts，设置为<code>remote_hosts=192.168.1.181,192.168.1.182</code>，其次，设置client.rmi.localport的值，表示控制节点将使用这个指定的端口与工作节点通信。其他设置使用默认值。</p>
 <figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">remote_hosts</span>=<span class="string">192.168.1.181,192.168.1.182</span></span><br><span class="line"><span class="meta">client.rmi.localport</span>=<span class="string">5000</span></span><br><span class="line"><span class="meta">server.rmi.ssl.disable</span>=<span class="string">true #设为true表示rmi不使用ssl进行通信</span></span><br></pre></td></tr></table></figure>
 
-<p>JMeter分布式环境中，主控节点和工作节点之间通过RMI通信。在上面配置中，我们使用5000作为主控节点的RMI端口，如果打开了防火墙，那么要允许主控节点上的5000端口与外部机器通信。</p>
+<p>JMeter分布式环境中，主控节点和工作节点之间通过RMI进行服务调用。在上面配置中，主控节点使用5000与工作节点通信，如果打开了防火墙，那么要打开5000端口。</p>
+<blockquote>
+<p>特别说明一下server.rmi.localport、server_ports、client.rmi.localport这几个相似配置的关系和区别：<br>server_ports指Java RMI注册表的端口，只需在工作节点配置。server.rmi.localport为工作节点使用的RMI本地端口，client.rmi.localport为主控节点使用的RMI本地端口，如果不设置，则JMeter使用动态端口互相通信。在开启防火墙的情况，需要指定端口，避免随机动态端口不能访问。</p>
+</blockquote>
 <p>另外，从 JMeter 4.0 开始，RMI 的默认传输机制将使用 SSL。本例为了简便期间，关闭使用SSL的机制。如果希望继续使用SSL，需要密钥和证书才能工作，参考<a href="../5%20remote_testing/5.1%20JMeter%E8%BF%9C%E7%A8%8B%E6%B5%8B%E8%AF%95.md">JMeter远程测试</a>中关于SSL的设置。</p>
 <h3 id="设置工作节点"><a href="#设置工作节点" class="headerlink" title="设置工作节点"></a>设置工作节点</h3><p>正如上面说的，工作节点在JMeter分布式测试环境中，也称为server节点（服务节点）。不过注意这个服务节点与被测服务不同，要区分开。</p>
 <p>在jmeter/bin目录打开jmeter.properties进行编辑。在工作节点上设置server.rmi.localport的值，表示工作节点将使用这个指定的端口与控制节点通信：</p>
@@ -271,6 +275,15 @@
 
    
   <nav class="article-nav">
+    
+      <a href="/2021/09/18/%E4%BD%BF%E7%94%A8JMeter%E6%B5%8B%E8%AF%95%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%9F%BA%E5%87%86%E6%80%A7%E8%83%BD/" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            使用JMeter测试服务器基准性能
+          
+        </div>
+      </a>
     
     
       <a href="/2021/09/09/Maven%E5%B8%B8%E7%94%A8%E4%BB%93%E5%BA%93%E5%8F%8A%E9%85%8D%E7%BD%AE%E5%A4%9A%E4%BB%93%E5%BA%93/" class="article-nav-link">
