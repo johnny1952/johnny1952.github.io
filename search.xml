@@ -397,7 +397,9 @@
 <p>先安装git，因为make的时候需要用到。下载git工程后安装，工程地址<a href="https://github.com/wg/wrk">https://github.com/wg/wrk</a>。下载后进入wrk的git工程目录直接执行make，得到一个二进制文件wrk，这个就是可执行程序。</p>
 <p>3）安装jmeter</p>
 <p>在<a href="https://jmeter.apache.org/download_jmeter.cgi">jmeter官网</a>下载解压即可。部署分布式环境请参考另外一篇文章<a href="https://johnny1952.github.io/2021/09/16/%E6%90%AD%E5%BB%BAJMeter%E5%88%86%E5%B8%83%E5%BC%8F%E6%B5%8B%E8%AF%95%E7%8E%AF%E5%A2%83/">搭建JMeter分布式测试环境</a>。</p>
-<h2 id="服务器和NGINX服务优化"><a href="#服务器和NGINX服务优化" class="headerlink" title="服务器和NGINX服务优化"></a>服务器和NGINX服务优化</h2><p>对负载机和被测服务器均进行了相关优化，优化点包括：</p>
+<h2 id="服务器和NGINX服务优化"><a href="#服务器和NGINX服务优化" class="headerlink" title="服务器和NGINX服务优化"></a>服务器和NGINX服务优化</h2><ol>
+<li>对负载机和被测服务器均进行了相关优化，具体优化参考我的另外一篇博客<a href=""></a>。</li>
+</ol>
 <ul>
 <li>可打开文件数</li>
 <li>系统网络参数优化 可使用端口范围</li>
