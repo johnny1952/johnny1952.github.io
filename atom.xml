@@ -6,7 +6,7 @@
   <link href="https://johnny1952.github.io/atom.xml" rel="self"/>
   
   <link href="https://johnny1952.github.io/"/>
-  <updated>2021-10-05T15:59:15.828Z</updated>
+  <updated>2021-10-11T13:19:57.022Z</updated>
   <id>https://johnny1952.github.io/</id>
   
   <author>
@@ -15,6 +15,36 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>JMeter调优</title>
+    <link href="https://johnny1952.github.io/2021/10/07/JMeter%E8%B0%83%E4%BC%98/"/>
+    <id>https://johnny1952.github.io/2021/10/07/JMeter%E8%B0%83%E4%BC%98/</id>
+    <published>2021-10-06T16:44:00.000Z</published>
+    <updated>2021-10-11T13:19:57.022Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h2 id=&quot;背景&quot;&gt;&lt;a href=&quot;#背景&quot; class=&quot;headerlink&quot; title=&quot;背景&quot;&gt;&lt;/a&gt;背景&lt;/h2&gt;&lt;p&gt;可能多少对于JMeter存在这样一些刻板印象：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;JMeter 消耗大量内存…&lt;/li&gt;
+&lt;li&gt;JMeter</summary>
+        
+      
+    
+    
+    
+    <category term="jmeter" scheme="https://johnny1952.github.io/categories/jmeter/"/>
+    
+    
+    <category term="jmeter" scheme="https://johnny1952.github.io/tags/jmeter/"/>
+    
+    <category term="performance-tune" scheme="https://johnny1952.github.io/tags/performance-tune/"/>
+    
+  </entry>
   
   <entry>
     <title>CentOS7调优实践</title>
@@ -50,7 +80,7 @@
     <link href="https://johnny1952.github.io/2021/09/18/%E4%BD%BF%E7%94%A8JMeter%E6%B5%8B%E8%AF%95%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%9F%BA%E5%87%86%E6%80%A7%E8%83%BD/"/>
     <id>https://johnny1952.github.io/2021/09/18/%E4%BD%BF%E7%94%A8JMeter%E6%B5%8B%E8%AF%95%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%9F%BA%E5%87%86%E6%80%A7%E8%83%BD/</id>
     <published>2021-09-18T13:03:00.000Z</published>
-    <updated>2021-10-05T17:20:49.820Z</updated>
+    <updated>2021-10-11T13:10:15.190Z</updated>
     
     
       
