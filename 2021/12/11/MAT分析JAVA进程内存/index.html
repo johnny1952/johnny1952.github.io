@@ -13,7 +13,7 @@
         name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1"
       />
-      <title>JMeter调优 |  恰得福来的博客</title>
+      <title>MAT分析JAVA进程内存 |  恰得福来的博客</title>
   <meta name="generator" content="hexo-theme-ayer">
       
       <link rel="shortcut icon" href="/favicon.ico" />
@@ -57,7 +57,7 @@
     <main class="content on">
       <section class="outer">
   <article
-  id="post-JMeter调优"
+  id="post-MAT分析JAVA进程内存"
   class="article article-type-post"
   itemscope
   itemprop="blogPost"
@@ -68,7 +68,7 @@
     <header class="article-header">
        
 <h1 class="article-title sea-center" style="border-left:0" itemprop="name">
-  JMeter调优
+  MAT分析JAVA进程内存
 </h1>
  
 
@@ -76,19 +76,15 @@
     </header>
      
     <div class="article-meta">
-      <a href="/2021/10/07/JMeter%E8%B0%83%E4%BC%98/" class="article-date">
-  <time datetime="2021-10-06T16:44:00.000Z" itemprop="datePublished">2021-10-07</time>
-</a> 
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/jmeter/">jmeter</a>
-  </div>
-  
+      <a href="/2021/12/11/MAT%E5%88%86%E6%9E%90JAVA%E8%BF%9B%E7%A8%8B%E5%86%85%E5%AD%98/" class="article-date">
+  <time datetime="2021-12-11T05:21:29.000Z" itemprop="datePublished">2021-12-11</time>
+</a>   
 <div class="word_count">
     <span class="post-time">
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> 字数统计:</span>
-            <span class="post-count">2.5k</span>
+            <span class="post-count">983</span>
         </span>
     </span>
 
@@ -97,7 +93,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> 阅读时长≈</span>
-            <span class="post-count">9 分钟</span>
+            <span class="post-count">4 分钟</span>
         </span>
     </span>
 </div>
@@ -112,68 +108,47 @@
   
     <div class="article-entry" itemprop="articleBody">
        
-  <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>可能多少对于JMeter存在这样一些刻板印象：</p>
-<ul>
-<li>JMeter 消耗大量内存…</li>
-<li>JMeter 产生 OutOfMemory 错误…</li>
-<li>JMeter 消耗大量 CPU…</li>
-<li>其他</li>
-</ul>
-<p>那么，是否还有调优的余地？可能指望它像一些轻量级工具那样轻巧是有点难了，比如ab，比如wrk。但是如果能够将jmeter优化成只比这些工具多消耗一些不多的资源，那么多个jmeter协同工作的威力就可以充分发挥出来了。</p>
-<h2 id="调优清单"><a href="#调优清单" class="headerlink" title="调优清单"></a>调优清单</h2><p>下面是一些调优技巧清单，还有很多其他更细致的优化手段没有列出来：</p>
-<ol>
-<li>从命令行运行 ：避免在负载测试期间使用 JMeter UI，它会占用大量内存</li>
-<li>避免使用监听器 ：避免使用图形或结果表等 UI 监听组件</li>
-<li>增加 JVM 堆空间 ：以更大的内存量启动 JMeter，如下例所示：<code>JVM_ARGS=&quot;-Xms512m -Xmx512m&quot; jmeter.sh1</code>,考虑将每个 JVM 的内存增加到 8GB，在同一台机器上至少有 8GB 的​​可用 RAM。</li>
-<li>使用最新的 JMeter 版本 ：JMeter 会定期随着新版本的发布而改进。 坚持使用最新版本以获得最新的改进。</li>
-<li>使用 Regexp 变量提取器从响应中提取数据 ：但永远不要使用 的 Body（未转义） 解析整个响应 DOM 树 选项。 避免使用 Json、Xpath 和任何其他花哨的后处理器。 这些会消耗大量内存。</li>
-<li>避免从大型响应中提取数据 ：整个响应都保存在内存中，从而显着增加了内存消耗。 只提取必要的数据，而不是更多。</li>
-<li>每台机器模拟合理数量的线程 每台机器 ：避免 模拟超过 1000 个用户。 通常，瓶颈是网络连接（在最佳云实例上为 1Gbps）。 JVM 不能很好地处理超过 2000 个线程。</li>
-<li>在普通机器上分配负载 ：避免使用少数具有特殊硬件（例如 16 核 / 128GB RAM）的机器，坚持使用普通机器（4 核，16GB RAM）并使用更多机器代替。 JMeter 无法利用这么多 RAM，因为 JVM 不能很好地处理大于 16GB 的 Xmx。</li>
-<li>明智地使用断言 ：断言会增加内存使用量。 使用几个是合理的，但避免使用太多，因为它会显着增加内存使用量。 此外，避免对大型服务器响应（大于 1MB）进行断言。</li>
-<li>运行后生成报告 后， ：负载测试完成 使用输出的 JTL 文件创建报告。 构建报告需要大量的 CPU 和内存资源。</li>
-<li>在大多数情况下，网络是瓶颈 ：这意味着最好拥有具有良好网络连接的中型机器，而不是具有低网络能力的强大机器。</li>
-<li>避免 BeanShell 脚本 ：这些脚本比嵌入在 JSR223 采样器中的 Groovy 脚本使用更多的 CPU 来执行。 如果你需要运行自定义逻辑，请坚持使用 JSR223 采样器。</li>
-<li>不要在分布式模式下运行 ：分布式模式适用于 20-30 台机器，如果运气好的话，最多可以使用 40-50 台机器。 这会将你限制为 20-50k 并发用户。 相反，通过在开始测试之前发送 JMX 并在完成后检索 JTL 文件来独立运行每个 JMeter 实例。 JMeter 用于在负载生成器和控制器之间进行通信的 RMI 协议效率不高。</li>
-<li>在 JTL 中仅存储指标而不是请求/响应 在 JTL 中 ：避免 存储请求、响应、响应头，因为它会使用大量资源。 当然，在发生故障时让服务器响应很好，但是在运行大负载测试时就不合理了。</li>
-<li>作为最后的手段，调整 JVM ：垃圾收集器 (-XX:+UseConcMarkSweepGC)、服务器 JVM (-server) 等设置可以通过编辑 JMeter 启动程序脚本在 JVM_ARGS 中设置。 但是，一旦你尝试从 JVM 中获取最后的汁液，JMeter 的行为可能会出乎意料。 通常，优化场景效果更好。</li>
-<li>优化正则表达式 正则表达式 ：写得不好的 会影响 CPU 性能。 尝试查看 正则表达式指南 ，也许你的正则表达式提取器表达式可以缩小。</li>
-<li>使用带有物理硬件的专用负载生成器 ：避免使用虚拟机，因为运行这些的机器与其他虚拟机共享资源（尤其是网络）。 专用物理机是确保最大稳定性的最佳选择。</li>
-<li>逐渐增加负载 ：缓慢增加模拟负载以避免过快地压倒测试的服务器。 通常，较小的负载测试是针对服务器运行的，以在对其进行测试 进行 预热 之前对其 。</li>
-<li>避免功能模式 ：这种运行模式不适合负载测试，因为它在 JTL 结果文件中存储了更多信息。</li>
-<li>将结果存储在 CSV JTL 而不是 XML 中 ：XML 需要 JMeter 在磁盘上写入更多 CPU。 此外，它比 CSV 格式更冗长，因此需要更多的磁盘空间。</li>
-<li>在测试期间监控 JMeter 日志 ：这可以通过在负载测试期间使用 等工具发送 JMeter 日志来实现 Elastic Stack 。 这样，你可以密切关注每个负载生成器在负载测试期间的行为。</li>
-<li>使用测试元素的命名约定 ：这样，你可以快速将结果与业务事务和请求相关联。 使用唯一的名称来防止结果文件中不同测试元素的结果混合。</li>
-<li>避免过于复杂的场景 ：你模拟的负载越多，模拟的场景就越不复杂。 复杂的场景难以理解，使得结果更难以解释。 KISS （Keep It Simple And Stupid）是最好的方法。</li>
-<li>使用 Oracle JVM 而不是 OpenJDK ：Oracle JVM 最适合运行高要求 JVM 应用程序（如 JMeter）。 Oracle JVM 在压力下通常更稳定。</li>
-<li>在测试期间监控负载生成器 ：密切关注每个负载生成器的 CPU/内存/网络使用情况。 有时，由于负载生成器的大小不正确，测试可能会变得异常。 通过监控它们，你可以防止结果被误解：测试可能因为负载生成器不堪重负而出错。</li>
-<li>监控测试服务器 ：发现性能瓶颈的关键是监控运行负载测试的测试后端服务器。 你将能够将性能下降与服务器端问题相关联。 这样，你可以更快地解决后端方面的性能问题。 工具 Perfmon 之 推荐使用 类的 。</li>
-<li>首先在内部运行负载测试 ：这听起来可能很奇怪，但是负载生成器离测试的服务器越近，影响性能测试结果的因素就越少。 本地负载测试可避免 Internet 连接问题，并可使用大型内部网络（通常为 1 到 10 Gbps）。 一旦服务器在内部测试中表现良好，云测试就可以揭示互联网网络问题。 这样，你可以将服务器问题与网络问题分开。</li>
-<li>避免对第三方服务进行负载测试 ：删除对第三方服务（如 Google、Gmail、Facebook、雅虎、Reddit 等）的任何请求，以避免对不属于你自己的服务进行负载测试。 他们可能会禁止你这样做（被视为 DDoS 攻击），并且可能会以错误的方式影响测试结果。</li>
-<li>快速响应时间并不总是意味着快速服务器 ：还要检查错误计数。 服务器通常在提供错误页面方面非常快，而在提供有意义的网页时要慢得多。 当你有大量错误时，请确保你不会被出色的响应时间所欺骗。</li>
-<li>扩展 JMeter 既困难又耗时 ：虽然运行分布式 JMeter 测试自己似乎很有趣，因为云机器如此便宜，但真正的价值并不存在。 自动发送 JMX、发送 CSV 文件、启动 JMeter 实例、监控一切，然后收集结果并分析它们需要时间。 你的时间也有成本，考虑到这一点。</li>
-<li>避免通过代理进行负载测试 ：否则你最终也会对代理服务器进行负载测试。 根据负载，代理可能会在你的服务器之前失败。 避免任何可能影响测试结果的中间网络设备或服务器。</li>
-<li>http采样器使用合适的实现</li>
-</ol>
-<h2 id="具体调优"><a href="#具体调优" class="headerlink" title="具体调优"></a>具体调优</h2><p>包括：</p>
-<ul>
-<li>最大堆大小：我们每台机器内存有16GB，可以分配12GB给jmeter，因此把堆大小往上调大为：<code>heap=-Xms1024m -Xmx12288m</code></li>
-<li>假设每个线程需要1MB内存，那么1k线程需要1GB内存，理论上我们设置最大内存为</li>
-<li>内存分配率：</li>
-</ul>
-<h2 id="接着对测试脚本进行优化，确保"><a href="#接着对测试脚本进行优化，确保" class="headerlink" title="接着对测试脚本进行优化，确保"></a>接着对测试脚本进行优化，确保</h2><p>如果http sampler采用httpclient4，经过测试发现性能更高（高25%左右），虽然cpu使用率也更高一些。</p>
-<p>采用另外一种GC的方法ConcMarkSweep，下面的命令有待验证：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">GC_ALGO:=<span class="string">&quot;-XX:+UseConcMarkSweepGC&quot;</span> JVM_ARGS=<span class="string">&quot;-Dcom.sun.management.jmxremote.port=1098 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Xms4g -Xmx12g -XX:NewSize=128m -XX:MaxNewSize=512m -agentlib:jprofilerti=port=8849,nowait -Xbootclasspath/a:/opt/jprofiler12/bin/agent.jar&quot;</span> ./jmeter -Dserver_port=<span class="variable">$&#123;SERVER_PORT:-1099&#125;</span> -s -j jmeter-server.log <span class="string">&quot;<span class="variable">$@</span>&quot;</span></span><br></pre></td></tr></table></figure>
+  <h1 id="MAT分析JAVA进程内存"><a href="#MAT分析JAVA进程内存" class="headerlink" title="MAT分析JAVA进程内存"></a>MAT分析JAVA进程内存</h1><h2 id="jstatd-jvisualvm监视内存使用"><a href="#jstatd-jvisualvm监视内存使用" class="headerlink" title="jstatd + jvisualvm监视内存使用"></a>jstatd + jvisualvm监视内存使用</h2><p>一般情况下，如果服务端开了JMX端口，那么可以用jvisualvm对接堆jmx端口进行监控。但有时服务进程可能没有开jmx端口，那么就可以借助于jstatd进程来完成实现监控了。jstatd的作用是获取服务进程的运行信息，然后jvisualvm通过jmx端口（jstatd会启动jmx端口）获取远端服务进程的内存使用情况。</p>
+<h3 id="在目标服务器启动jstatd"><a href="#在目标服务器启动jstatd" class="headerlink" title="在目标服务器启动jstatd"></a>在目标服务器启动jstatd</h3><p>在任意目录下创建一个文件，只要以.policy结尾，这里假设路径是/opt/jstad-config/jstatd.all.policy:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">grant codebase <span class="string">&quot;file:$&#123;java.home&#125;/../lib/tools.jar&quot;</span>&#123;</span><br><span class="line">    permission java.security.AllPermission;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
 
-<h2 id="验证"><a href="#验证" class="headerlink" title="验证"></a>验证</h2><h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
-<li>jmeter优化技巧 <a target="_blank" rel="noopener" href="https://octoperf.com/blog/2017/10/12/optimize-jmeter-for-large-scale-tests/#tips-and-tricks">https://octoperf.com/blog/2017/10/12/optimize-jmeter-for-large-scale-tests/#tips-and-tricks</a></li>
-<li>解决jmeter内存问题 <a target="_blank" rel="noopener" href="https://octoperf.com/blog/2017/10/17/solve-jmeter-out-of-memory-issues/#use-the-right-script-engine">https://octoperf.com/blog/2017/10/17/solve-jmeter-out-of-memory-issues/#use-the-right-script-engine</a></li>
-<li><a target="_blank" rel="noopener" href="https://octoperf.com/blog/2017/10/12/optimize-jmeter-for-large-scale-tests/#cloud-instances">https://octoperf.com/blog/2017/10/12/optimize-jmeter-for-large-scale-tests/#cloud-instances</a></li>
-<li>jmeter性能调优 <a target="_blank" rel="noopener" href="https://www.ubik-ingenierie.com/blog/jmeter_performance_tuning_tips/">https://www.ubik-ingenierie.com/blog/jmeter_performance_tuning_tips/</a></li>
-<li>调优JVM： <a target="_blank" rel="noopener" href="https://help.aliyun.com/document_detail/148851.html">https://help.aliyun.com/document_detail/148851.html</a></li>
-<li>最佳实践 <a target="_blank" rel="noopener" href="http://jmeter.apache.org/usermanual/best-practices.html">http://jmeter.apache.org/usermanual/best-practices.html</a></li>
-<li>计算单机所能支持的线程数 <a target="_blank" rel="noopener" href="https://sarkershantonu.github.io/2015/04/16/user-threads-jmeter-supports/">https://sarkershantonu.github.io/2015/04/16/user-threads-jmeter-supports/</a></li>
-</ul>
+<p>以后端进程形式启动jstatd,默认开启jmx端口1099:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jstatd -J-Djava.security.policy=/opt/jstad-config/jstatd.all.policy -J-Djava.rmi.server.hostname=xx.yy.zz.aa &amp;</span><br></pre></td></tr></table></figure>
+
+<p>然后可远程查看java进程（语法<code>jps xx.yy.zz.aa</code>）或使用jvisualvm连接到该服务器上查看需要监控的进程。</p>
+<p>参考：<a target="_blank" rel="noopener" href="https://blog.csdn.net/u013887008/article/details/84746610">https://blog.csdn.net/u013887008/article/details/84746610</a></p>
+<h3 id="在jvisualvm监控远程java进程"><a href="#在jvisualvm监控远程java进程" class="headerlink" title="在jvisualvm监控远程java进程"></a>在jvisualvm监控远程java进程</h3><p>打开jvisualvm。</p>
+<p>在左侧remote下添加远程服务器，hostname就按照上面启动jstatd进程时指定的hostname填写。</p>
+<p>添加完成后，选中远程服务器节点，右键，选择“add jstatd connection“。填写jstatd使用的jmx端口及刷新间隔。</p>
+<p>添加连接：</p>
+<p><img src="/images/mat/mat-add-jstatd-conn.png" alt="add jstatd conn"></p>
+<p>设置连接：</p>
+<p><img src="/images/mat/mat-set-jstatd-conn.png" alt="add jstatd conn"></p>
+<p>然后，可以在jvisualvm实时监控远端服务内存情况了。</p>
+<p>说明：这种方法对远端服务器的资源消耗有多少，具体没测试过。可能需要注意一下。</p>
+<h2 id="深度分析java代码"><a href="#深度分析java代码" class="headerlink" title="深度分析java代码"></a>深度分析java代码</h2><h3 id="代码结构"><a href="#代码结构" class="headerlink" title="代码结构"></a>代码结构</h3><p>Entity类：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.ajupiter;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.util.ArrayList;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Entity</span> </span>&#123;</span><br><span class="line">    ArrayList&lt;String&gt; arrayList;</span><br><span class="line">    String name;</span><br><span class="line">    <span class="keyword">int</span> age;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Entity</span><span class="params">(String a, <span class="keyword">int</span> b)</span> </span>&#123;</span><br><span class="line">        name = a;</span><br><span class="line">        <span class="keyword">int</span> len = <span class="number">100</span>;</span><br><span class="line">        arrayList = <span class="keyword">new</span> ArrayList&lt;String&gt;(<span class="number">100</span>);</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; len; i++) &#123;</span><br><span class="line">            arrayList.add(<span class="string">&quot;thisi is no. &quot;</span> + i);</span><br><span class="line">        &#125;</span><br><span class="line">        age = b;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>产生OOME错误的类：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.ajupiter;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.util.Date;</span><br><span class="line"><span class="keyword">import</span> java.util.HashMap;</span><br><span class="line"><span class="keyword">import</span> java.util.Map;</span><br><span class="line"></span><br><span class="line"><span class="comment">//测试产生OOM错误，实际最大运行时间约30s，但一般会因为产生OOM错误提前结束</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">OOMProducer</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">oom</span><span class="params">()</span> <span class="keyword">throws</span> InterruptedException </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> len = <span class="number">30000</span>;</span><br><span class="line">        Object[] array = <span class="keyword">new</span> Object[len];</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; len; i++) &#123;</span><br><span class="line">            String d = <span class="keyword">new</span> Date().toString();</span><br><span class="line">            Entity p = <span class="keyword">new</span> Entity(d, i);</span><br><span class="line">            Map&lt;Integer, Entity&gt; map = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">            map.put(i, p);</span><br><span class="line">            array[i] = p;</span><br><span class="line">            Thread.sleep(<span class="number">1</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>主类：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.ajupiter;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Main</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        OOMProducer oomProducer = <span class="keyword">new</span> OOMProducer();</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            oomProducer.oom();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;出现错误&quot;</span>);</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="运行程序使产生OOME错误"><a href="#运行程序使产生OOME错误" class="headerlink" title="运行程序使产生OOME错误"></a>运行程序使产生OOME错误</h3><p>使用javac 编译代码：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">javac -d target src/**/*.java</span><br></pre></td></tr></table></figure>
+
+<p>然后cd到target目录，执行程序。因为我指定了最大堆大小为10M，所以程序运行到一段时间后报错，如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">➜  target java -Xmx10m -Xms10m -XX:+HeapDumpOnOutOfMemoryError com.ajupiter.Main</span><br><span class="line">java.lang.OutOfMemoryError: Java heap space</span><br><span class="line">Dumping heap to java_pid33714.hprof ...</span><br><span class="line">Heap dump file created [14343715 bytes <span class="keyword">in</span> 0.080 secs]</span><br><span class="line">Exception <span class="keyword">in</span> thread <span class="string">&quot;main&quot;</span> java.lang.OutOfMemoryError: Java heap space</span><br><span class="line">        at java.base/jdk.internal.misc.Unsafe.allocateUninitializedArray(Unsafe.java:1271)</span><br><span class="line">        at java.base/java.lang.invoke.StringConcatFactory<span class="variable">$MethodHandleInlineCopyStrategy</span>.newArray(StringConcatFactory.java:1633)</span><br><span class="line">        at java.base/java.lang.invoke.DirectMethodHandle<span class="variable">$Holder</span>.invokeStatic(DirectMethodHandle<span class="variable">$Holder</span>)</span><br><span class="line">        at java.base/java.lang.invoke.LambdaForm<span class="variable">$MH</span>/0x0000000800063c40.invoke(LambdaForm<span class="variable">$MH</span>)</span><br><span class="line">        at java.base/java.lang.invoke.Invokers<span class="variable">$Holder</span>.linkToTargetMethod(Invokers<span class="variable">$Holder</span>)</span><br><span class="line">        at com.ajupiter.Entity.&lt;init&gt;(Entity.java:16)</span><br><span class="line">        at com.ajupiter.OOMProducer.oom(OOMProducer.java:15)</span><br><span class="line">        at com.ajupiter.Main.main(Main.java:9)</span><br></pre></td></tr></table></figure>
+
+<p>如果是在IDEA中运行，也可以在菜单Run下的Run/Debug Configurations对话框，添加VM选项<code>-Xmx10m -Xms10m -XX:+HeapDumpOnOutOfMemoryError</code>。</p>
+<p><img src="/images/mat/mat-add-vm-options.png" alt="add vm option"></p>
+<p>在运行过程中，可以借助于VisualVM观察该程序实际使用的内存情况。</p>
+<h3 id="使用MAT分析"><a href="#使用MAT分析" class="headerlink" title="使用MAT分析"></a>使用MAT分析</h3><p>对上述产生的java_pid33714.hprof文件，使用MAT（Eclipse Memory Analyzer Tool）分析。</p>
+<p>显示了具体的内存泄漏情况。</p>
+<p><img src="/images/mat/mat-analyze.png" alt="mat analyze"></p>
+<p>有一篇文章对内存泄漏有详细分析，个人觉得写得还是很不错的。见<a target="_blank" rel="noopener" href="https://blog.csdn.net/rachel_luo/article/details/8992461">https://blog.csdn.net/rachel_luo/article/details/8992461</a>。上面的代码案例也基本参考了这篇博文。</p>
+<p>提示：如果产生的dump文件（.hprof)比较大，记得修改MAT的最大堆大小。</p>
  
       <!-- reward -->
       
@@ -238,32 +213,21 @@
     <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://johnny1952.github.io/2021/10/07/JMeter%E8%B0%83%E4%BC%98/" alt="微信分享二维码">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://johnny1952.github.io/2021/12/11/MAT%E5%88%86%E6%9E%90JAVA%E8%BF%9B%E7%A8%8B%E5%86%85%E5%AD%98/" alt="微信分享二维码">
     </div>
 </div>
 
 <div id="share-mask"></div>  
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/jmeter/" rel="tag">jmeter</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/performance-tune/" rel="tag">performance-tune</a></li></ul>
-
     </footer>
   </div>
 
    
   <nav class="article-nav">
     
-      <a href="/2021/12/11/MAT%E5%88%86%E6%9E%90JAVA%E8%BF%9B%E7%A8%8B%E5%86%85%E5%AD%98/" class="article-nav-link">
-        <strong class="article-nav-caption">上一篇</strong>
-        <div class="article-nav-title">
-          
-            MAT分析JAVA进程内存
-          
-        </div>
-      </a>
     
-    
-      <a href="/2021/10/05/CentOS7%E8%B0%83%E4%BC%98%E5%AE%9E%E8%B7%B5/" class="article-nav-link">
+      <a href="/2021/10/07/JMeter%E8%B0%83%E4%BC%98/" class="article-nav-link">
         <strong class="article-nav-caption">下一篇</strong>
-        <div class="article-nav-title">CentOS7调优实践</div>
+        <div class="article-nav-title">JMeter调优</div>
       </a>
     
   </nav>
