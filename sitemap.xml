@@ -102,6 +102,69 @@
 
   
   <url>
+    <loc>https://johnny1952.github.io/tags/centos/</loc>
+    <lastmod>2021-12-22</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://johnny1952.github.io/tags/linux/</loc>
+    <lastmod>2021-12-22</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://johnny1952.github.io/tags/performance/</loc>
+    <lastmod>2021-12-22</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://johnny1952.github.io/tags/jmeter/</loc>
+    <lastmod>2021-12-22</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://johnny1952.github.io/tags/performance-tune/</loc>
+    <lastmod>2021-12-22</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://johnny1952.github.io/tags/maven/</loc>
+    <lastmod>2021-12-22</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://johnny1952.github.io/tags/build/</loc>
+    <lastmod>2021-12-22</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://johnny1952.github.io/tags/config/</loc>
+    <lastmod>2021-12-22</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://johnny1952.github.io/tags/helloworld/</loc>
+    <lastmod>2021-12-22</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>https://johnny1952.github.io/tags/JMeter/</loc>
     <lastmod>2021-12-22</lastmod>
     <changefreq>daily</changefreq>
@@ -137,13 +200,6 @@
   </url>
   
   <url>
-    <loc>https://johnny1952.github.io/tags/helloworld/</loc>
-    <lastmod>2021-12-22</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
     <loc>https://johnny1952.github.io/tags/pyecharts/</loc>
     <lastmod>2021-12-22</lastmod>
     <changefreq>daily</changefreq>
@@ -165,41 +221,6 @@
   </url>
   
   <url>
-    <loc>https://johnny1952.github.io/tags/jmeter/</loc>
-    <lastmod>2021-12-22</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://johnny1952.github.io/tags/debug/</loc>
-    <lastmod>2021-12-22</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://johnny1952.github.io/tags/maven/</loc>
-    <lastmod>2021-12-22</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://johnny1952.github.io/tags/build/</loc>
-    <lastmod>2021-12-22</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://johnny1952.github.io/tags/config/</loc>
-    <lastmod>2021-12-22</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
     <loc>https://johnny1952.github.io/tags/distributed/</loc>
     <lastmod>2021-12-22</lastmod>
     <changefreq>daily</changefreq>
@@ -214,35 +235,14 @@
   </url>
   
   <url>
+    <loc>https://johnny1952.github.io/tags/debug/</loc>
+    <lastmod>2021-12-22</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>https://johnny1952.github.io/tags/%E6%80%A7%E8%83%BD%E6%B5%8B%E8%AF%95/</loc>
-    <lastmod>2021-12-22</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://johnny1952.github.io/tags/centos/</loc>
-    <lastmod>2021-12-22</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://johnny1952.github.io/tags/linux/</loc>
-    <lastmod>2021-12-22</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://johnny1952.github.io/tags/performance/</loc>
-    <lastmod>2021-12-22</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://johnny1952.github.io/tags/performance-tune/</loc>
     <lastmod>2021-12-22</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
@@ -251,14 +251,7 @@
 
   
   <url>
-    <loc>https://johnny1952.github.io/categories/helloworld/</loc>
-    <lastmod>2021-12-22</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://johnny1952.github.io/categories/python/</loc>
+    <loc>https://johnny1952.github.io/categories/centos/</loc>
     <lastmod>2021-12-22</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
@@ -279,6 +272,20 @@
   </url>
   
   <url>
+    <loc>https://johnny1952.github.io/categories/helloworld/</loc>
+    <lastmod>2021-12-22</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://johnny1952.github.io/categories/python/</loc>
+    <lastmod>2021-12-22</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>https://johnny1952.github.io/categories/maven/java/</loc>
     <lastmod>2021-12-22</lastmod>
     <changefreq>daily</changefreq>
@@ -287,13 +294,6 @@
   
   <url>
     <loc>https://johnny1952.github.io/categories/jmeter/test/</loc>
-    <lastmod>2021-12-22</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://johnny1952.github.io/categories/centos/</loc>
     <lastmod>2021-12-22</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
